@@ -14,6 +14,9 @@ export default function AdminSidebar({ className = '' }: AdminSidebarProps) {
                 <Link to="/admin/events" className="block hover:text-harvest-orange">
                     Content
                 </Link>
+                <Link to="/admin/journeys" className="block hover:text-harvest-orange">
+                    Journeys
+                </Link>
                 <Link to="/admin/registrations" className="block hover:text-harvest-orange">
                     Registrations
                 </Link>
