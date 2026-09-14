@@ -1,7 +1,4 @@
 // ─── Admin Journeys: Service (Model) ────────────────────────────────────────
-// Reading, editing and lifecycle changes run against /api/journeys/admin.
-// Creating a journey and persisting Parts are still local and land in
-// SCRUM-200 and SCRUM-202.
 
 import type { CategoryOption, Journey, JourneyContentType, JourneyFormData, JourneyQuery, JourneyStatus, JourneyPart, PartFormData } from './adminJourneys.types';
 

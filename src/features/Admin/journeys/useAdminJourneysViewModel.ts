@@ -56,7 +56,6 @@ export function useAdminJourneysViewModel() {
         try {
             setAllJourneys(await AdminJourneysService.fetchJourneys());
         } catch {
-            // Non-fatal: only the status counters go stale.
         }
     };
 
