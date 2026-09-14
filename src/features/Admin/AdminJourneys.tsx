@@ -173,6 +173,7 @@ export default function AdminJourneys() {
             <JourneyBuilderModal
                 open={vm.showBuilder}
                 journey={vm.editTarget}
+                isLoadingParts={vm.isLoadingDetail}
                 onClose={vm.closeBuilder}
                 onSave={vm.handleSave}
             />

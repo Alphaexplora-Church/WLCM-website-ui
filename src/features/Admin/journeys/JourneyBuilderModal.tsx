@@ -8,6 +8,7 @@ import { PartRow } from './PartRow';
 interface JourneyBuilderModalProps {
     open: boolean;
     journey: Journey | null;
+    isLoadingParts?: boolean;
     onClose: () => void;
     onSave: (form: JourneyFormData, parts: PartFormData[]) => Promise<void>;
 }
@@ -18,7 +19,7 @@ const STATUS_OPTIONS: { value: JourneyStatus; label: string }[] = [
     { value: 'archived', label: 'Archived' },
 ];
 
-export function JourneyBuilderModal({ open, journey, onClose, onSave }: JourneyBuilderModalProps) {
+export function JourneyBuilderModal({ open, journey, isLoadingParts = false, onClose, onSave }: JourneyBuilderModalProps) {
     const vm = useJourneyBuilderViewModel(journey, open);
 
     if (!open) return null;
@@ -155,7 +156,21 @@ export function JourneyBuilderModal({ open, journey, onClose, onSave }: JourneyB
                             </button>
                         </div>
 
-                        {vm.parts.length === 0 ? (
+                        {isLoadingParts ? (
+                            <div className="space-y-2" aria-busy="true" aria-label="Loading parts">
+                                {[0, 1, 2].map(row => (
+                                    <div
+                                        key={row}
+                                        className="flex items-center gap-3 border border-gray-100 rounded-xl px-4 py-3.5 animate-pulse"
+                                    >
+                                        <div className="w-4 h-4 rounded bg-gray-100" />
+                                        <div className="w-7 h-7 rounded-full bg-gray-100" />
+                                        <div className="h-3.5 rounded bg-gray-100 flex-1 max-w-56" />
+                                        <div className="h-3.5 w-16 rounded bg-gray-100" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : vm.parts.length === 0 ? (
                             <div className="border border-dashed border-gray-200 rounded-xl p-8 text-center text-sm text-gray-400">
                                 No parts yet. Add the first part of this series.
                             </div>
