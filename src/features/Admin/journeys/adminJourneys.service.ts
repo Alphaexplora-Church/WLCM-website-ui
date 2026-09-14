@@ -1,6 +1,7 @@
 // ─── Admin Journeys: Service (Model) ────────────────────────────────────────
-// Reading the list is live against /api/journeys/admin. The write paths below
-// are still localStorage and are replaced by SCRUM-200, 202 and 203.
+// Reading, editing and lifecycle changes run against /api/journeys/admin.
+// Creating a journey and persisting Parts are still local and land in
+// SCRUM-200 and SCRUM-202.
 
 import type { Journey, JourneyFormData, JourneyQuery, JourneyStatus, JourneyPart, PartFormData, PartStatus } from './adminJourneys.types';
 import { makePartId } from './adminJourneys.types';
@@ -25,6 +26,24 @@ interface ApiJourneyRow {
     createdAt: string;
     updatedAt: string;
 }
+
+interface ApiPartRow {
+    partId: string;
+    partOrder: number;
+    title: string;
+    mediaUrl: string | null;
+    readingText: string | null;
+    status: 'draft' | 'published' | 'archived';
+}
+
+const toPart = (row: ApiPartRow): JourneyPart => ({
+    id: row.partId,
+    title: row.title,
+    textContent: row.readingText ?? '',
+    videoUrl: row.mediaUrl ?? '',
+    status: row.status === 'archived' ? 'archived' : 'active',
+    order: row.partOrder,
+});
 
 const toJourney = (row: ApiJourneyRow): Journey => ({
     id: row.journeyId,
@@ -122,6 +141,24 @@ export const AdminJourneysService = {
         return (body.journeys ?? []).map(toJourney);
     },
 
+    fetchJourneyDetail: async (id: string): Promise<Journey> => {
+        const response = await fetch(`${API_BASE}/api/journeys/admin/${id}`, {
+            headers: authHeaders(),
+        });
+
+        if (!response.ok) {
+            const body = await response.json().catch(() => null);
+            throw new Error(body?.error ?? `Failed to load journey (${response.status})`);
+        }
+
+        const body = await response.json() as { journey: ApiJourneyRow; parts: ApiPartRow[] };
+
+        return {
+            ...toJourney(body.journey),
+            parts: (body.parts ?? []).map(toPart).sort((a, b) => a.order - b.order),
+        };
+    },
+
     createJourney: async (form: JourneyFormData, parts: PartFormData[]): Promise<Journey> => {
         await delay();
         const journeys = readAll();
@@ -140,36 +177,42 @@ export const AdminJourneysService = {
     },
 
     updateJourney: async (id: string, form: JourneyFormData, parts: PartFormData[]): Promise<Journey> => {
-        await delay();
-        const journeys = readAll();
-        const idx = journeys.findIndex(j => j.id === id);
-        if (idx === -1) throw new Error('Journey not found');
-        const updated: Journey = {
-            ...journeys[idx],
-            title: form.title,
-            description: form.description,
-            status: form.status,
-            parts: partsFromForm(parts),
-            updatedAt: nowIso(),
-        };
-        journeys[idx] = updated;
-        writeAll(journeys);
-        return updated;
-    },
+        void parts;
 
-    deleteJourney: async (id: string): Promise<void> => {
-        await delay();
-        writeAll(readAll().filter(j => j.id !== id));
+        const response = await fetch(`${API_BASE}/api/journeys/admin/${id}`, {
+            method: 'PATCH',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                title: form.title.trim(),
+                description: form.description.trim(),
+            }),
+        });
+
+        if (!response.ok) {
+            const body = await response.json().catch(() => null);
+            throw new Error(body?.error ?? `Failed to save journey (${response.status})`);
+        }
+
+        return AdminJourneysService.fetchJourneyDetail(id);
     },
 
     setJourneyStatus: async (id: string, status: JourneyStatus): Promise<Journey> => {
-        await delay();
-        const journeys = readAll();
-        const idx = journeys.findIndex(j => j.id === id);
-        if (idx === -1) throw new Error('Journey not found');
-        journeys[idx] = { ...journeys[idx], status, updatedAt: nowIso() };
-        writeAll(journeys);
-        return journeys[idx];
+        if (status === 'draft') {
+            throw new Error('A journey cannot be moved back to draft. Archive it instead.');
+        }
+
+        const path = status === 'archived' ? 'archive' : 'publish';
+        const response = await fetch(`${API_BASE}/api/journeys/admin/${id}/${path}`, {
+            method: 'PATCH',
+            headers: authHeaders(),
+        });
+
+        if (!response.ok) {
+            const body = await response.json().catch(() => null);
+            throw new Error(body?.error ?? `Failed to update status (${response.status})`);
+        }
+
+        return AdminJourneysService.fetchJourneyDetail(id);
     },
 
     setPartStatus: async (journeyId: string, partId: string, status: PartStatus): Promise<Journey> => {

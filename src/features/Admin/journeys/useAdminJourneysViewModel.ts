@@ -21,7 +21,7 @@ export function useAdminJourneysViewModel() {
 
     const [showBuilder, setShowBuilder] = useState(false);
     const [editTarget, setEditTarget] = useState<Journey | null>(null);
-    const [deleteTarget, setDeleteTarget] = useState<Journey | null>(null);
+    const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
     const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
@@ -90,7 +90,20 @@ export function useAdminJourneysViewModel() {
 
     // ── Builder handlers ─────────────────────────────────────────────────────
     const openCreateBuilder = () => { setEditTarget(null); setShowBuilder(true); };
-    const openEditBuilder = (journey: Journey) => { setEditTarget(journey); setShowBuilder(true); };
+
+    const openEditBuilder = async (journey: Journey) => {
+        setEditTarget(journey);
+        setShowBuilder(true);
+        setIsLoadingDetail(true);
+        try {
+            setEditTarget(await AdminJourneysService.fetchJourneyDetail(journey.id));
+        } catch {
+            showToast('Could not load this journey.', 'error');
+        } finally {
+            setIsLoadingDetail(false);
+        }
+    };
+
     const closeBuilder = () => { setShowBuilder(false); setEditTarget(null); };
 
     const handleSave = async (form: JourneyFormData, parts: PartFormData[]) => {
@@ -106,14 +119,14 @@ export function useAdminJourneysViewModel() {
     };
 
     // ── Lifecycle handlers ───────────────────────────────────────────────────
-    const togglePublish = async (journey: Journey) => {
-        const next: JourneyStatus = journey.status === 'published' ? 'draft' : 'published';
+    const publishJourney = async (journey: Journey) => {
         try {
-            await AdminJourneysService.setJourneyStatus(journey.id, next);
-            showToast(next === 'published' ? `"${journey.title}" published.` : `"${journey.title}" unpublished.`);
+            await AdminJourneysService.setJourneyStatus(journey.id, 'published');
+            showToast(`"${journey.title}" published.`);
             await load();
-        } catch {
-            showToast('Failed to update status.', 'error');
+            await loadAll();
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : 'Failed to publish.', 'error');
         }
     };
 
@@ -122,42 +135,28 @@ export function useAdminJourneysViewModel() {
             await AdminJourneysService.setJourneyStatus(journey.id, 'archived');
             showToast(`"${journey.title}" archived.`);
             await load();
-        } catch {
-            showToast('Failed to archive.', 'error');
+            await loadAll();
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : 'Failed to archive.', 'error');
         }
     };
 
     const restoreJourney = async (journey: Journey) => {
         try {
-            await AdminJourneysService.setJourneyStatus(journey.id, 'draft');
-            showToast(`"${journey.title}" restored to draft.`);
+            await AdminJourneysService.setJourneyStatus(journey.id, 'published');
+            showToast(`"${journey.title}" is live again.`);
             await load();
-        } catch {
-            showToast('Failed to restore.', 'error');
-        }
-    };
-
-    const openDeleteModal = (journey: Journey) => setDeleteTarget(journey);
-    const closeDeleteModal = () => setDeleteTarget(null);
-
-    const handleDelete = async () => {
-        if (!deleteTarget) return;
-        try {
-            await AdminJourneysService.deleteJourney(deleteTarget.id);
-            showToast(`"${deleteTarget.title}" deleted.`);
-            closeDeleteModal();
-            await load();
-        } catch {
-            showToast('Failed to delete.', 'error');
+            await loadAll();
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : 'Failed to restore.', 'error');
         }
     };
 
     return {
         journeys, filtered, counts, isLoading, error, retry: load,
         search, setSearch, statusFilter, setStatusFilter, dateSort, setDateSort,
-        showBuilder, editTarget, openCreateBuilder, openEditBuilder, closeBuilder, handleSave,
-        deleteTarget, openDeleteModal, closeDeleteModal, handleDelete,
-        togglePublish, archiveJourney, restoreJourney,
+        showBuilder, editTarget, isLoadingDetail, openCreateBuilder, openEditBuilder, closeBuilder, handleSave,
+        publishJourney, archiveJourney, restoreJourney,
         toast,
     };
 }
