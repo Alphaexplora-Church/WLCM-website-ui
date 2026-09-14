@@ -61,7 +61,7 @@ export function JourneyBuilderModal({ open, journey, onClose, onSave }: JourneyB
                             <textarea
                                 value={vm.form.description}
                                 onChange={e => vm.setField('description', e.target.value)}
-                                rows={3}
+                                rows={5}
                                 placeholder="What is this journey about?"
                                 className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-black focus:outline-none focus:ring-2 focus:ring-midnight-teal/40 resize-none"
                             />

@@ -162,7 +162,7 @@ export function PartRow({
                                 <textarea
                                     value={part.textContent}
                                     onChange={e => onChange('textContent', e.target.value)}
-                                    rows={3}
+                                    rows={6}
                                     placeholder="Notes, transcript, or supporting text for this part..."
                                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-midnight-teal/40 resize-none"
                                 />
