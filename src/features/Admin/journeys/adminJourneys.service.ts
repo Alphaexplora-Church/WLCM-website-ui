@@ -61,6 +61,8 @@ const fetchCategoryCatalog = async (): Promise<CategoryOption[]> => {
     return categoryCatalog;
 };
 
+const getCachedCategories = (): CategoryOption[] => categoryCatalog ?? [];
+
 const toCategoryIds = async (names: string[]): Promise<string[]> => {
     const catalog = await fetchCategoryCatalog();
     const idByName = new Map(catalog.map(option => [option.name.toLowerCase(), option.categoryId]));
@@ -204,6 +206,7 @@ const toJourney = (row: ApiJourneyRow): Journey => ({
 
 export const AdminJourneysService = {
     fetchCategories: fetchCategoryCatalog,
+    getCachedCategories,
 
     fetchJourneys: async (query: JourneyQuery = {}): Promise<Journey[]> => {
         const params = new URLSearchParams({ limit: '50' });

@@ -31,7 +31,7 @@ export function useJourneyBuilderViewModel(journey: Journey | null, open: boolea
     const [saveError, setSaveError] = useState<string | null>(null);
     // Accordion: which part card is expanded for editing (compact by default).
     const [expandedId, setExpandedId] = useState<string | null>(null);
-    const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
+    const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>(AdminJourneysService.getCachedCategories);
 
     useEffect(() => {
         if (!open) return;

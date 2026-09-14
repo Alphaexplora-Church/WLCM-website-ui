@@ -60,7 +60,10 @@ export function useAdminJourneysViewModel() {
         }
     };
 
-    useEffect(() => { loadAll(); }, []);
+    useEffect(() => {
+        loadAll();
+        AdminJourneysService.fetchCategories().catch(() => undefined);
+    }, []);
 
     useEffect(() => { load(); }, [debouncedSearch, statusFilter]);
 

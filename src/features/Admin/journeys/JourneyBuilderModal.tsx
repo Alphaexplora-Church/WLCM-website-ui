@@ -96,28 +96,24 @@ export function JourneyBuilderModal({ open, journey, onClose, onSave }: JourneyB
 
                         <div>
                             <label className="block text-xs font-bold uppercase tracking-widest text-midnight-teal mb-1">Categories</label>
-                            {vm.categoryOptions.length === 0 ? (
-                                <p className="text-xs text-gray-400">Loading categories...</p>
-                            ) : (
-                                <div className="flex flex-wrap gap-2">
-                                    {vm.categoryOptions.map(opt => {
-                                        const active = vm.form.categories.includes(opt.name);
-                                        return (
-                                            <button
-                                                key={opt.categoryId}
-                                                type="button"
-                                                onClick={() => vm.toggleCategory(opt.name)}
-                                                className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-colors
-                                                    ${active
-                                                        ? 'bg-midnight-teal text-soft-linen border-midnight-teal'
-                                                        : 'bg-white text-gray-400 border-gray-200 hover:border-midnight-teal/40 hover:text-midnight-teal'}`}
-                                            >
-                                                {opt.name}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
+                            <div className="flex flex-wrap gap-2 min-h-8">
+                                {vm.categoryOptions.map(opt => {
+                                    const active = vm.form.categories.includes(opt.name);
+                                    return (
+                                        <button
+                                            key={opt.categoryId}
+                                            type="button"
+                                            onClick={() => vm.toggleCategory(opt.name)}
+                                            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-colors
+                                                ${active
+                                                    ? 'bg-midnight-teal text-soft-linen border-midnight-teal'
+                                                    : 'bg-white text-gray-400 border-gray-200 hover:border-midnight-teal/40 hover:text-midnight-teal'}`}
+                                        >
+                                            {opt.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         <div>
