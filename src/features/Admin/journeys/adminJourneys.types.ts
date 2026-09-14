@@ -9,6 +9,7 @@ export interface JourneyPart {
     textContent: string;
     videoUrl: string;
     status: PartStatus;
+    apiStatus?: 'draft' | 'published' | 'archived';
     order: number;
 }
 

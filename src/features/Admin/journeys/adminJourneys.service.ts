@@ -3,8 +3,7 @@
 // Creating a journey and persisting Parts are still local and land in
 // SCRUM-200 and SCRUM-202.
 
-import type { Journey, JourneyFormData, JourneyQuery, JourneyStatus, JourneyPart, PartFormData, PartStatus } from './adminJourneys.types';
-import { makePartId } from './adminJourneys.types';
+import type { Journey, JourneyFormData, JourneyQuery, JourneyStatus, JourneyPart, PartFormData } from './adminJourneys.types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
@@ -42,8 +41,117 @@ const toPart = (row: ApiPartRow): JourneyPart => ({
     textContent: row.readingText ?? '',
     videoUrl: row.mediaUrl ?? '',
     status: row.status === 'archived' ? 'archived' : 'active',
+    apiStatus: row.status,
     order: row.partOrder,
 });
+
+const mediaTypeFor = (url: string): string | null => {
+    const trimmed = url.trim();
+    if (!trimmed) return null;
+    if (/youtube\.com|youtu\.be/i.test(trimmed)) return 'youtube';
+    if (/vimeo\.com/i.test(trimmed)) return 'vimeo';
+    return null;
+};
+
+const partContentBody = (part: PartFormData) => ({
+    title: part.title.trim(),
+    media_url: part.videoUrl.trim() || null,
+    media_type: mediaTypeFor(part.videoUrl),
+    reading_text: part.textContent.trim() || null,
+});
+
+const hasContent = (part: PartFormData) =>
+    Boolean(part.videoUrl.trim() || part.textContent.trim());
+
+const sameContent = (staged: PartFormData, server: JourneyPart) =>
+    staged.title.trim() === server.title
+    && staged.videoUrl.trim() === server.videoUrl
+    && staged.textContent.trim() === server.textContent;
+
+const send = async (url: string, init: RequestInit, fallback: string) => {
+    const response = await fetch(url, { ...init, headers: authHeaders() });
+    if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error ?? `${fallback} (${response.status})`);
+    }
+    return response;
+};
+
+const syncParts = async (
+    journeyId: string,
+    staged: PartFormData[],
+    serverParts: JourneyPart[],
+): Promise<string[]> => {
+    const serverById = new Map(serverParts.map(part => [part.id, part]));
+    const orderedIds: string[] = [];
+
+    for (const part of staged) {
+        const before = serverById.get(part.id);
+
+        if (!before) {
+            const created = await send(
+                `${API_BASE}/api/journeys/admin/${journeyId}/parts`,
+                { method: 'POST', body: JSON.stringify({ title: part.title.trim() }) },
+                `Failed to add "${part.title}"`,
+            );
+            const { partId } = await created.json() as { partId: string };
+            orderedIds.push(partId);
+
+            if (hasContent(part)) {
+                await send(
+                    `${API_BASE}/api/journeys/admin/${journeyId}/parts/${partId}`,
+                    { method: 'PUT', body: JSON.stringify(partContentBody(part)) },
+                    `Failed to save "${part.title}"`,
+                );
+            }
+
+            if (part.status === 'archived') {
+                await send(
+                    `${API_BASE}/api/journeys/admin/${journeyId}/parts/${partId}/archive`,
+                    { method: 'PATCH' },
+                    `Failed to archive "${part.title}"`,
+                );
+            } else if (hasContent(part)) {
+                await send(
+                    `${API_BASE}/api/journeys/admin/${journeyId}/parts/${partId}/publish`,
+                    { method: 'PATCH', body: JSON.stringify({ status: 'published' }) },
+                    `Failed to publish "${part.title}"`,
+                );
+            }
+
+            continue;
+        }
+
+        orderedIds.push(part.id);
+
+        if (!sameContent(part, before)) {
+            await send(
+                `${API_BASE}/api/journeys/admin/${journeyId}/parts/${part.id}`,
+                { method: 'PUT', body: JSON.stringify(partContentBody(part)) },
+                `Failed to save "${part.title}"`,
+            );
+        }
+
+        const wantArchived = part.status === 'archived';
+        const isArchived = before.apiStatus === 'archived';
+
+        if (wantArchived && !isArchived) {
+            await send(
+                `${API_BASE}/api/journeys/admin/${journeyId}/parts/${part.id}/archive`,
+                { method: 'PATCH' },
+                `Failed to archive "${part.title}"`,
+            );
+        } else if (!wantArchived && before.apiStatus !== 'published' && hasContent(part)) {
+            await send(
+                `${API_BASE}/api/journeys/admin/${journeyId}/parts/${part.id}/publish`,
+                { method: 'PATCH', body: JSON.stringify({ status: 'published' }) },
+                `Failed to publish "${part.title}"`,
+            );
+        }
+    }
+
+    return orderedIds;
+};
 
 const toJourney = (row: ApiJourneyRow): Journey => ({
     id: row.journeyId,
@@ -55,72 +163,6 @@ const toJourney = (row: ApiJourneyRow): Journey => ({
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
 });
-
-const STORAGE_KEY = 'wlcm_admin_journeys';
-
-const nowIso = () => new Date().toISOString();
-
-const seedJourneys = (): Journey[] => {
-    const t = nowIso();
-    return [
-        {
-            id: makePartId(),
-            title: 'Foundations of Faith',
-            description: 'A four-part journey for new believers to build a solid foundation.',
-            status: 'published',
-            publishedParts: 2,
-            createdAt: t,
-            updatedAt: t,
-            parts: [
-                { id: makePartId(), title: 'Who Is God?', textContent: 'An introduction to the character of God.', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', status: 'active', order: 0 },
-                { id: makePartId(), title: 'The Gift of Grace', textContent: 'Understanding salvation by grace through faith.', videoUrl: '', status: 'active', order: 1 },
-            ],
-        },
-        {
-            id: makePartId(),
-            title: 'Purpose Driven Life',
-            description: 'A short series exploring calling and purpose.',
-            status: 'draft',
-            publishedParts: 0,
-            createdAt: t,
-            updatedAt: t,
-            parts: [
-                { id: makePartId(), title: 'Made on Purpose', textContent: '', videoUrl: '', status: 'active', order: 0 },
-            ],
-        },
-    ];
-};
-
-const readAll = (): Journey[] => {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-            const seeded = seedJourneys();
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-            return seeded;
-        }
-        return JSON.parse(raw) as Journey[];
-    } catch {
-        return [];
-    }
-};
-
-const writeAll = (journeys: Journey[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(journeys));
-};
-
-const partsFromForm = (parts: PartFormData[]): JourneyPart[] =>
-    parts.map((p, index) => ({
-        id: p.id,
-        title: p.title,
-        textContent: p.textContent,
-        videoUrl: p.videoUrl,
-        status: p.status,
-        order: index,
-    }));
-
-// Simulated network latency so loading states are visible in the UI.
-const delay = (ms = 250) => new Promise(res => setTimeout(res, ms));
 
 export const AdminJourneysService = {
     fetchJourneys: async (query: JourneyQuery = {}): Promise<Journey[]> => {
@@ -160,61 +202,60 @@ export const AdminJourneysService = {
     },
 
     createJourney: async (form: JourneyFormData, parts: PartFormData[]): Promise<Journey> => {
-        await delay();
-        const journeys = readAll();
-        const journey: Journey = {
-            id: makePartId(),
-            title: form.title,
-            description: form.description,
-            status: form.status,
-            parts: partsFromForm(parts),
-            publishedParts: 0,
-            createdAt: nowIso(),
-            updatedAt: nowIso(),
-        };
-        writeAll([journey, ...journeys]);
-        return journey;
+        const created = await send(`${API_BASE}/api/journeys/admin`, {
+            method: 'POST',
+            body: JSON.stringify({
+                title: form.title.trim(),
+                description: form.description.trim(),
+                content_type: 'general',
+            }),
+        }, 'Failed to create the journey');
+
+        const { journeyId } = await created.json() as { journeyId: string };
+
+        const orderedIds = await syncParts(journeyId, parts, []);
+
+        if (orderedIds.length > 1) {
+            await send(`${API_BASE}/api/journeys/admin/${journeyId}/parts/reorder`, {
+                method: 'PATCH',
+                body: JSON.stringify({ orderedPartIds: orderedIds }),
+            }, 'Failed to save the part order');
+        }
+
+        if (form.status === 'published') {
+            await send(`${API_BASE}/api/journeys/admin/${journeyId}/publish`, { method: 'PATCH' },
+                'Failed to publish the journey');
+        }
+
+        return AdminJourneysService.fetchJourneyDetail(journeyId);
     },
 
     updateJourney: async (id: string, form: JourneyFormData, parts: PartFormData[]): Promise<Journey> => {
-        const response = await fetch(`${API_BASE}/api/journeys/admin/${id}`, {
+        await send(`${API_BASE}/api/journeys/admin/${id}`, {
             method: 'PATCH',
-            headers: authHeaders(),
             body: JSON.stringify({
                 title: form.title.trim(),
                 description: form.description.trim(),
             }),
-        });
+        }, 'Failed to save the journey');
 
-        if (!response.ok) {
-            const body = await response.json().catch(() => null);
-            throw new Error(body?.error ?? `Failed to save journey (${response.status})`);
-        }
+        const before = await AdminJourneysService.fetchJourneyDetail(id);
+        const orderedIds = await syncParts(id, parts, before.parts);
 
-        const saved = await AdminJourneysService.fetchJourneyDetail(id);
-
-        const serverIds = saved.parts.map(part => part.id);
-        const stagedIds = parts.map(part => part.id);
-        const samePartSet = serverIds.length === stagedIds.length
-            && new Set(stagedIds).size === stagedIds.length
-            && serverIds.every(partId => stagedIds.includes(partId));
-
-        if (samePartSet && serverIds.join(',') !== stagedIds.join(',')) {
-            const reordered = await fetch(`${API_BASE}/api/journeys/admin/${id}/parts/reorder`, {
+        const serverOrder = before.parts.map(part => part.id).join(',');
+        if (orderedIds.join(',') !== serverOrder && orderedIds.length >= before.parts.length) {
+            await send(`${API_BASE}/api/journeys/admin/${id}/parts/reorder`, {
                 method: 'PATCH',
-                headers: authHeaders(),
-                body: JSON.stringify({ orderedPartIds: stagedIds }),
-            });
-
-            if (!reordered.ok) {
-                const body = await reordered.json().catch(() => null);
-                throw new Error(body?.error ?? `Failed to save the new part order (${reordered.status})`);
-            }
-
-            return AdminJourneysService.fetchJourneyDetail(id);
+                body: JSON.stringify({ orderedPartIds: orderedIds }),
+            }, 'Failed to save the new part order');
         }
 
-        return saved;
+        if (form.status === 'published' && before.status !== 'published') {
+            await send(`${API_BASE}/api/journeys/admin/${id}/publish`, { method: 'PATCH' },
+                'Failed to publish the journey');
+        }
+
+        return AdminJourneysService.fetchJourneyDetail(id);
     },
 
     setJourneyStatus: async (id: string, status: JourneyStatus): Promise<Journey> => {
@@ -234,16 +275,5 @@ export const AdminJourneysService = {
         }
 
         return AdminJourneysService.fetchJourneyDetail(id);
-    },
-
-    setPartStatus: async (journeyId: string, partId: string, status: PartStatus): Promise<Journey> => {
-        await delay();
-        const journeys = readAll();
-        const idx = journeys.findIndex(j => j.id === journeyId);
-        if (idx === -1) throw new Error('Journey not found');
-        const parts = journeys[idx].parts.map(p => p.id === partId ? { ...p, status } : p);
-        journeys[idx] = { ...journeys[idx], parts, updatedAt: nowIso() };
-        writeAll(journeys);
-        return journeys[idx];
     },
 };
