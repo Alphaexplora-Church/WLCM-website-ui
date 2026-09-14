@@ -177,8 +177,6 @@ export const AdminJourneysService = {
     },
 
     updateJourney: async (id: string, form: JourneyFormData, parts: PartFormData[]): Promise<Journey> => {
-        void parts;
-
         const response = await fetch(`${API_BASE}/api/journeys/admin/${id}`, {
             method: 'PATCH',
             headers: authHeaders(),
@@ -193,7 +191,30 @@ export const AdminJourneysService = {
             throw new Error(body?.error ?? `Failed to save journey (${response.status})`);
         }
 
-        return AdminJourneysService.fetchJourneyDetail(id);
+        const saved = await AdminJourneysService.fetchJourneyDetail(id);
+
+        const serverIds = saved.parts.map(part => part.id);
+        const stagedIds = parts.map(part => part.id);
+        const samePartSet = serverIds.length === stagedIds.length
+            && new Set(stagedIds).size === stagedIds.length
+            && serverIds.every(partId => stagedIds.includes(partId));
+
+        if (samePartSet && serverIds.join(',') !== stagedIds.join(',')) {
+            const reordered = await fetch(`${API_BASE}/api/journeys/admin/${id}/parts/reorder`, {
+                method: 'PATCH',
+                headers: authHeaders(),
+                body: JSON.stringify({ orderedPartIds: stagedIds }),
+            });
+
+            if (!reordered.ok) {
+                const body = await reordered.json().catch(() => null);
+                throw new Error(body?.error ?? `Failed to save the new part order (${reordered.status})`);
+            }
+
+            return AdminJourneysService.fetchJourneyDetail(id);
+        }
+
+        return saved;
     },
 
     setJourneyStatus: async (id: string, status: JourneyStatus): Promise<Journey> => {
