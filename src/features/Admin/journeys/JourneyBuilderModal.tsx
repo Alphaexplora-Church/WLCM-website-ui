@@ -1,5 +1,6 @@
 // ─── Journey Builder: Modal (View) ──────────────────────────────────────────
 import { Reorder } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import type { Journey, JourneyContentType, JourneyFormData, JourneyStatus, PartFormData } from './adminJourneys.types';
 import { CONTENT_TYPE_OPTIONS } from './adminJourneys.types';
 import { useJourneyBuilderViewModel } from './useJourneyBuilderViewModel';
@@ -157,18 +158,9 @@ export function JourneyBuilderModal({ open, journey, isLoadingParts = false, onC
                         </div>
 
                         {isLoadingParts ? (
-                            <div className="space-y-2" aria-busy="true" aria-label="Loading parts">
-                                {[0, 1, 2].map(row => (
-                                    <div
-                                        key={row}
-                                        className="flex items-center gap-3 border border-gray-100 rounded-xl px-4 py-3.5 animate-pulse"
-                                    >
-                                        <div className="w-4 h-4 rounded bg-gray-100" />
-                                        <div className="w-7 h-7 rounded-full bg-gray-100" />
-                                        <div className="h-3.5 rounded bg-gray-100 flex-1 max-w-56" />
-                                        <div className="h-3.5 w-16 rounded bg-gray-100" />
-                                    </div>
-                                ))}
+                            <div className="flex items-center justify-center gap-2 border border-dashed border-gray-200 rounded-xl p-8 text-center">
+                                <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                                <p className="text-sm text-gray-400">Loading parts...</p>
                             </div>
                         ) : vm.parts.length === 0 ? (
                             <div className="border border-dashed border-gray-200 rounded-xl p-8 text-center text-sm text-gray-400">
