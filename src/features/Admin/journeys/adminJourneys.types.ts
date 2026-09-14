@@ -18,8 +18,14 @@ export interface Journey {
     description: string;
     status: JourneyStatus;
     parts: JourneyPart[];
+    publishedParts: number;
     createdAt: string; // ISO
     updatedAt: string; // ISO
+}
+
+export interface JourneyQuery {
+    search?: string;
+    status?: JourneyStatus;
 }
 
 export interface JourneyFormData {

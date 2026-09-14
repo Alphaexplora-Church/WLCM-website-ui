@@ -202,7 +202,9 @@ interface JourneyRowProps {
 
 function JourneyRow({ journey, onEdit, onTogglePublish, onArchive, onRestore, onDelete }: JourneyRowProps) {
     const isArchived = journey.status === 'archived';
-    const activeParts = journey.parts.filter(p => p.status === 'active').length;
+    const activeParts = journey.parts.length
+        ? journey.parts.filter(p => p.status === 'active').length
+        : journey.publishedParts;
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-[1fr_100px_90px_120px_120px_150px] gap-3 px-5 py-4 items-center hover:bg-soft-linen/40 transition-colors">
@@ -220,7 +222,7 @@ function JourneyRow({ journey, onEdit, onTogglePublish, onArchive, onRestore, on
             </span>
 
             {/* Parts */}
-            <span className="text-sm text-gray-500">{activeParts}/{journey.parts.length}</span>
+            <span className="text-sm text-gray-500">{journey.parts.length ? `${activeParts}/${journey.parts.length}` : `${activeParts} published`}</span>
 
             {/* Created */}
             <span className="text-xs text-gray-400">{formatDate(journey.createdAt)}</span>

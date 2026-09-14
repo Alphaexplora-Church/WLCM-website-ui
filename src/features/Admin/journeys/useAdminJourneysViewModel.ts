@@ -11,6 +11,7 @@ export function useAdminJourneysViewModel() {
     const navigate = useNavigate();
 
     const [journeys, setJourneys] = useState<Journey[]>([]);
+    const [allJourneys, setAllJourneys] = useState<Journey[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -28,20 +29,40 @@ export function useAdminJourneysViewModel() {
         if (!localStorage.getItem('token')) navigate('/login');
     }, [navigate]);
 
-    useEffect(() => { load(); }, []);
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+        return () => clearTimeout(timer);
+    }, [search]);
 
     const load = async () => {
         setIsLoading(true);
         setError(null);
         try {
-            const items = await AdminJourneysService.fetchJourneys();
+            const items = await AdminJourneysService.fetchJourneys({
+                search: debouncedSearch || undefined,
+                status: statusFilter === 'all' ? undefined : statusFilter,
+            });
             setJourneys(items);
-        } catch {
-            setError('Could not load journeys.');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Could not load journeys.');
         } finally {
             setIsLoading(false);
         }
     };
+
+    const loadAll = async () => {
+        try {
+            setAllJourneys(await AdminJourneysService.fetchJourneys());
+        } catch {
+            // Non-fatal: only the status counters go stale.
+        }
+    };
+
+    useEffect(() => { loadAll(); }, []);
+
+    useEffect(() => { load(); }, [debouncedSearch, statusFilter]);
 
     const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
         setToast({ msg, type });
@@ -49,10 +70,7 @@ export function useAdminJourneysViewModel() {
     };
 
     // ── Derived: filtered + sorted list ─────────────────────────────────────
-    const q = search.toLowerCase();
     const filtered = journeys
-        .filter(j => j.title.toLowerCase().includes(q) || j.description.toLowerCase().includes(q))
-        .filter(j => statusFilter === 'all' || j.status === statusFilter)
         .slice()
         .sort((a, b) => {
             switch (dateSort) {
@@ -64,10 +82,10 @@ export function useAdminJourneysViewModel() {
         });
 
     const counts = {
-        all: journeys.length,
-        draft: journeys.filter(j => j.status === 'draft').length,
-        published: journeys.filter(j => j.status === 'published').length,
-        archived: journeys.filter(j => j.status === 'archived').length,
+        all: allJourneys.length,
+        draft: allJourneys.filter(j => j.status === 'draft').length,
+        published: allJourneys.filter(j => j.status === 'published').length,
+        archived: allJourneys.filter(j => j.status === 'archived').length,
     };
 
     // ── Builder handlers ─────────────────────────────────────────────────────

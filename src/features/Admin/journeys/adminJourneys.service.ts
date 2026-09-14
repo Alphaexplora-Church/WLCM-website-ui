@@ -1,11 +1,41 @@
 // ─── Admin Journeys: Service (Model) ────────────────────────────────────────
-// Persists to localStorage so the Journey Builder works standalone against
-// this UI-only project. Swap the body of each method for `fetch(...)` calls
-// against a real `/api/journeys` endpoint when the backend is ready — the
-// method signatures below already match the shape that would require.
+// Reading the list is live against /api/journeys/admin. The write paths below
+// are still localStorage and are replaced by SCRUM-200, 202 and 203.
 
-import type { Journey, JourneyFormData, JourneyStatus, JourneyPart, PartFormData, PartStatus } from './adminJourneys.types';
+import type { Journey, JourneyFormData, JourneyQuery, JourneyStatus, JourneyPart, PartFormData, PartStatus } from './adminJourneys.types';
 import { makePartId } from './adminJourneys.types';
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
+const authHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('No auth token found. Please log in.');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+    };
+};
+
+interface ApiJourneyRow {
+    journeyId: string;
+    title: string;
+    description: string | null;
+    status: JourneyStatus;
+    totalPublishedParts: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+const toJourney = (row: ApiJourneyRow): Journey => ({
+    id: row.journeyId,
+    title: row.title,
+    description: row.description ?? '',
+    status: row.status,
+    parts: [],
+    publishedParts: row.totalPublishedParts ?? 0,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+});
 
 const STORAGE_KEY = 'wlcm_admin_journeys';
 
@@ -19,6 +49,7 @@ const seedJourneys = (): Journey[] => {
             title: 'Foundations of Faith',
             description: 'A four-part journey for new believers to build a solid foundation.',
             status: 'published',
+            publishedParts: 2,
             createdAt: t,
             updatedAt: t,
             parts: [
@@ -31,6 +62,7 @@ const seedJourneys = (): Journey[] => {
             title: 'Purpose Driven Life',
             description: 'A short series exploring calling and purpose.',
             status: 'draft',
+            publishedParts: 0,
             createdAt: t,
             updatedAt: t,
             parts: [
@@ -72,9 +104,22 @@ const partsFromForm = (parts: PartFormData[]): JourneyPart[] =>
 const delay = (ms = 250) => new Promise(res => setTimeout(res, ms));
 
 export const AdminJourneysService = {
-    fetchJourneys: async (): Promise<Journey[]> => {
-        await delay();
-        return readAll().slice().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    fetchJourneys: async (query: JourneyQuery = {}): Promise<Journey[]> => {
+        const params = new URLSearchParams({ limit: '50' });
+        if (query.search) params.set('search', query.search);
+        if (query.status) params.set('status', query.status);
+
+        const response = await fetch(`${API_BASE}/api/journeys/admin?${params.toString()}`, {
+            headers: authHeaders(),
+        });
+
+        if (!response.ok) {
+            const body = await response.json().catch(() => null);
+            throw new Error(body?.error ?? `Failed to load journeys (${response.status})`);
+        }
+
+        const body = await response.json() as { journeys: ApiJourneyRow[] };
+        return (body.journeys ?? []).map(toJourney);
     },
 
     createJourney: async (form: JourneyFormData, parts: PartFormData[]): Promise<Journey> => {
@@ -86,6 +131,7 @@ export const AdminJourneysService = {
             description: form.description,
             status: form.status,
             parts: partsFromForm(parts),
+            publishedParts: 0,
             createdAt: nowIso(),
             updatedAt: nowIso(),
         };
