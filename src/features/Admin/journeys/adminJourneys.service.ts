@@ -3,7 +3,7 @@
 // Creating a journey and persisting Parts are still local and land in
 // SCRUM-200 and SCRUM-202.
 
-import type { Journey, JourneyFormData, JourneyQuery, JourneyStatus, JourneyPart, PartFormData } from './adminJourneys.types';
+import type { CategoryOption, Journey, JourneyContentType, JourneyFormData, JourneyQuery, JourneyStatus, JourneyPart, PartFormData } from './adminJourneys.types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
@@ -20,6 +20,9 @@ interface ApiJourneyRow {
     journeyId: string;
     title: string;
     description: string | null;
+    summary: string | null;
+    contentType: JourneyContentType | null;
+    categories: string[] | null;
     status: JourneyStatus;
     totalPublishedParts: number;
     createdAt: string;
@@ -43,6 +46,38 @@ const toPart = (row: ApiPartRow): JourneyPart => ({
     status: row.status === 'archived' ? 'archived' : 'active',
     apiStatus: row.status,
     order: row.partOrder,
+});
+
+let categoryCatalog: CategoryOption[] | null = null;
+
+const fetchCategoryCatalog = async (): Promise<CategoryOption[]> => {
+    if (categoryCatalog) return categoryCatalog;
+
+    const response = await fetch(`${API_BASE}/api/journeys/public/categories`);
+    if (!response.ok) throw new Error(`Failed to load categories (${response.status})`);
+
+    const body = await response.json() as { categories: CategoryOption[] };
+    categoryCatalog = [...(body.categories ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
+    return categoryCatalog;
+};
+
+const toCategoryIds = async (names: string[]): Promise<string[]> => {
+    const catalog = await fetchCategoryCatalog();
+    const idByName = new Map(catalog.map(option => [option.name.toLowerCase(), option.categoryId]));
+
+    return names.map(name => {
+        const id = idByName.get(name.toLowerCase());
+        if (!id) throw new Error(`"${name}" is not a category in the catalog.`);
+        return id;
+    });
+};
+
+const journeyMetadataBody = async (form: JourneyFormData) => ({
+    title: form.title.trim(),
+    description: form.description.trim(),
+    summary: form.summary.trim() || null,
+    content_type: form.contentType,
+    category_ids: await toCategoryIds(form.categories),
 });
 
 const mediaTypeFor = (url: string): string | null => {
@@ -157,6 +192,9 @@ const toJourney = (row: ApiJourneyRow): Journey => ({
     id: row.journeyId,
     title: row.title,
     description: row.description ?? '',
+    summary: row.summary ?? '',
+    contentType: row.contentType ?? 'general',
+    categories: row.categories ?? [],
     status: row.status,
     parts: [],
     publishedParts: row.totalPublishedParts ?? 0,
@@ -165,6 +203,8 @@ const toJourney = (row: ApiJourneyRow): Journey => ({
 });
 
 export const AdminJourneysService = {
+    fetchCategories: fetchCategoryCatalog,
+
     fetchJourneys: async (query: JourneyQuery = {}): Promise<Journey[]> => {
         const params = new URLSearchParams({ limit: '50' });
         if (query.search) params.set('search', query.search);
@@ -204,11 +244,7 @@ export const AdminJourneysService = {
     createJourney: async (form: JourneyFormData, parts: PartFormData[]): Promise<Journey> => {
         const created = await send(`${API_BASE}/api/journeys/admin`, {
             method: 'POST',
-            body: JSON.stringify({
-                title: form.title.trim(),
-                description: form.description.trim(),
-                content_type: 'general',
-            }),
+            body: JSON.stringify(await journeyMetadataBody(form)),
         }, 'Failed to create the journey');
 
         const { journeyId } = await created.json() as { journeyId: string };
@@ -233,10 +269,7 @@ export const AdminJourneysService = {
     updateJourney: async (id: string, form: JourneyFormData, parts: PartFormData[]): Promise<Journey> => {
         await send(`${API_BASE}/api/journeys/admin/${id}`, {
             method: 'PATCH',
-            body: JSON.stringify({
-                title: form.title.trim(),
-                description: form.description.trim(),
-            }),
+            body: JSON.stringify(await journeyMetadataBody(form)),
         }, 'Failed to save the journey');
 
         const before = await AdminJourneysService.fetchJourneyDetail(id);

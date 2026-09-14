@@ -1,6 +1,7 @@
 // ─── Journey Builder: Modal (View) ──────────────────────────────────────────
 import { Reorder } from 'framer-motion';
-import type { Journey, JourneyFormData, JourneyStatus, PartFormData } from './adminJourneys.types';
+import type { Journey, JourneyContentType, JourneyFormData, JourneyStatus, PartFormData } from './adminJourneys.types';
+import { CONTENT_TYPE_OPTIONS } from './adminJourneys.types';
 import { useJourneyBuilderViewModel } from './useJourneyBuilderViewModel';
 import { PartRow } from './PartRow';
 
@@ -64,6 +65,59 @@ export function JourneyBuilderModal({ open, journey, onClose, onSave }: JourneyB
                                 placeholder="What is this journey about?"
                                 className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-black focus:outline-none focus:ring-2 focus:ring-midnight-teal/40 resize-none"
                             />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest text-midnight-teal mb-1">Content Type</label>
+                                <select
+                                    value={vm.form.contentType}
+                                    onChange={e => vm.setField('contentType', e.target.value as JourneyContentType)}
+                                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-black bg-white focus:outline-none focus:ring-2 focus:ring-midnight-teal/40"
+                                >
+                                    {CONTENT_TYPE_OPTIONS.map(opt => (
+                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest text-midnight-teal mb-1">
+                                    Summary <span className="normal-case font-semibold text-gray-400">(optional)</span>
+                                </label>
+                                <input
+                                    value={vm.form.summary}
+                                    onChange={e => vm.setField('summary', e.target.value)}
+                                    placeholder="Short teaser for listings"
+                                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-black focus:outline-none focus:ring-2 focus:ring-midnight-teal/40"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest text-midnight-teal mb-1">Categories</label>
+                            {vm.categoryOptions.length === 0 ? (
+                                <p className="text-xs text-gray-400">Loading categories...</p>
+                            ) : (
+                                <div className="flex flex-wrap gap-2">
+                                    {vm.categoryOptions.map(opt => {
+                                        const active = vm.form.categories.includes(opt.name);
+                                        return (
+                                            <button
+                                                key={opt.categoryId}
+                                                type="button"
+                                                onClick={() => vm.toggleCategory(opt.name)}
+                                                className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-colors
+                                                    ${active
+                                                        ? 'bg-midnight-teal text-soft-linen border-midnight-teal'
+                                                        : 'bg-white text-gray-400 border-gray-200 hover:border-midnight-teal/40 hover:text-midnight-teal'}`}
+                                            >
+                                                {opt.name}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
 
                         <div>

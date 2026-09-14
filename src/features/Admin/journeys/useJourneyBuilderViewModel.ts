@@ -1,11 +1,19 @@
 // ─── Journey Builder: ViewModel ──────────────────────────────────────────────
 import { useEffect, useState } from 'react';
-import type { Journey, JourneyFormData, PartFormData } from './adminJourneys.types';
+import type { CategoryOption, Journey, JourneyFormData, PartFormData } from './adminJourneys.types';
 import { EMPTY_JOURNEY_FORM, EMPTY_PART_FORM } from './adminJourneys.types';
+import { AdminJourneysService } from './adminJourneys.service';
 
 function journeyToForm(journey: Journey | null): JourneyFormData {
     if (!journey) return EMPTY_JOURNEY_FORM;
-    return { title: journey.title, description: journey.description, status: journey.status };
+    return {
+        title: journey.title,
+        description: journey.description,
+        summary: journey.summary,
+        contentType: journey.contentType,
+        categories: journey.categories,
+        status: journey.status,
+    };
 }
 
 function journeyToParts(journey: Journey | null): PartFormData[] {
@@ -23,6 +31,16 @@ export function useJourneyBuilderViewModel(journey: Journey | null, open: boolea
     const [saveError, setSaveError] = useState<string | null>(null);
     // Accordion: which part card is expanded for editing (compact by default).
     const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
+
+    useEffect(() => {
+        if (!open) return;
+        let cancelled = false;
+        AdminJourneysService.fetchCategories()
+            .then(options => { if (!cancelled) setCategoryOptions(options); })
+            .catch(() => undefined);
+        return () => { cancelled = true; };
+    }, [open]);
 
     useEffect(() => {
         setForm(journeyToForm(journey));
@@ -34,6 +52,15 @@ export function useJourneyBuilderViewModel(journey: Journey | null, open: boolea
 
     const setField = (field: keyof JourneyFormData, value: string) => {
         setForm(prev => ({ ...prev, [field]: value }));
+    };
+
+    const toggleCategory = (name: string) => {
+        setForm(prev => ({
+            ...prev,
+            categories: prev.categories.includes(name)
+                ? prev.categories.filter(item => item !== name)
+                : [...prev.categories, name],
+        }));
     };
 
     // ── Parts CRUD ────────────────────────────────────────────────────────
@@ -94,7 +121,7 @@ export function useJourneyBuilderViewModel(journey: Journey | null, open: boolea
     };
 
     return {
-        form, setField, parts, isSaving, saveError, isValid,
+        form, setField, categoryOptions, toggleCategory, parts, isSaving, saveError, isValid,
         expandedId, toggleExpand,
         addPart, updatePart, removePart, togglePartArchive, movePart, reorderParts,
         submit,
