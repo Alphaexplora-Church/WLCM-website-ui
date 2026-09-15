@@ -133,7 +133,6 @@ export default function Sermons() {
   const [activeTab, setActiveTab] = useState<Tab>('sermons');
   const [currentPage, setCurrentPage] = useState(1);
   const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null);
-  const [playing, setPlaying] = useState(false);
   const [openSeries, setOpenSeries] = useState<SeriesItem | null>(null);
 
   const [categoryOpen, setCategoryOpen] = useState(false);
@@ -218,12 +217,10 @@ export default function Sermons() {
 
   const openPlayer = (item: NowPlaying) => {
     setNowPlaying(item);
-    setPlaying(false);
   };
 
   const closePlayer = () => {
     setNowPlaying(null);
-    setPlaying(false);
   };
 
   const handleSeriesClick = (series: SeriesItem) => {
