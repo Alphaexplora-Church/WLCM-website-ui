@@ -25,7 +25,7 @@ const ministriesData: Ministry[] = [
     tagline: "Men of Purpose",
     category: "Life",
     story: "Equipping men to lead with integrity, faith, and courage in every area of life — home, work, and community.",
-    image: "",
+    image: "https://res.cloudinary.com/ldbgnurm/image/upload/f_auto,q_auto:good,w_1000/v1784304752/modern_day_knigts_nt18md.jpg",
   },
   {
     title: "At The Well",

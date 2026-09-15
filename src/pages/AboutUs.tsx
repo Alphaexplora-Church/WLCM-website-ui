@@ -163,7 +163,7 @@ export default function AboutUs() {
                   },
                   {
                     label: "Instagram",
-                    url: "https://www.instagram.com/wlcmmain/",
+                    url: "https://www.instagram.com/wordsoflife.ph/",
                     icon: (
                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
@@ -174,7 +174,7 @@ export default function AboutUs() {
                   },
                   {
                     label: "YouTube",
-                    url: "https://www.youtube.com/@WLCMMain",
+                    url: "https://www.youtube.com/@wordsoflifeph",
                     icon: (
                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" />

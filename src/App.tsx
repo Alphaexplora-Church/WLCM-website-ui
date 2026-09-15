@@ -1,13 +1,14 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import ScrollToTop from './components/ScrollToTop'; //
+import Give from './pages/Give';
 
 // --- IMPORT YOUR PAGES ---
 import Home from './pages/Home';
 import AboutUs from './pages/AboutUs';
 import Experience from './pages/Experience';
 import Engage from './pages/Engage';
-import Give from './pages/Give';
+import Sermons from "./features/Engage/Sermons"; 
 import Watch from './pages/Watch';
 import PrayerWall from './features/Engage/PrayerWall';
 import Contact from './features/Engage/Contact/index';
@@ -34,7 +35,7 @@ export default function App() {
         <Route path="/leaders" element={<AboutUs />} />
         <Route path="/experience" element={<Experience />} />
         <Route path="/engage" element={<Engage />} />
-        <Route path="/sermons" element={<Engage />} />
+        <Route path="/sermons" element={<Sermons />} />
         <Route path="/give" element={<Give />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/find-freedom" element={<FindFreedom />} />
