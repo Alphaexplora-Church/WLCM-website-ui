@@ -19,6 +19,7 @@ interface ApiJourneyRow {
     description: string | null;
     summary: string | null;
     contentType: JourneyContentType | null;
+    thumbnailUrl: string | null;
     categories: string[] | null;
     status: JourneyStatus;
     totalPublishedParts: number;
@@ -71,13 +72,28 @@ const toCategoryIds = async (names: string[]): Promise<string[]> => {
     });
 };
 
-const journeyMetadataBody = async (form: JourneyFormData) => ({
-    title: form.title.trim(),
-    description: form.description.trim(),
-    summary: form.summary.trim() || null,
-    content_type: form.contentType,
-    category_ids: await toCategoryIds(form.categories),
-});
+const journeyMetadataBody = async (form: JourneyFormData, thumbnailFile?: File | null): Promise<BodyInit> => {
+    const categoryIds = await toCategoryIds(form.categories);
+
+    if (!thumbnailFile) {
+        return JSON.stringify({
+            title: form.title.trim(),
+            description: form.description.trim(),
+            summary: form.summary.trim() || null,
+            content_type: form.contentType,
+            category_ids: categoryIds,
+        });
+    }
+
+    const data = new FormData();
+    data.append('title', form.title.trim());
+    data.append('description', form.description.trim());
+    data.append('summary', form.summary.trim());
+    data.append('content_type', form.contentType);
+    data.append('category_ids', categoryIds.join(','));
+    data.append('image', thumbnailFile);
+    return data;
+};
 
 const mediaTypeFor = (url: string): string | null => {
     const trimmed = url.trim();
@@ -103,7 +119,9 @@ const sameContent = (staged: PartFormData, server: JourneyPart) =>
     && staged.textContent.trim() === server.textContent;
 
 const send = async (url: string, init: RequestInit, fallback: string) => {
-    const response = await fetch(url, { ...init, headers: authHeaders() });
+    const headers = authHeaders();
+    if (init.body instanceof FormData) delete headers['Content-Type'];
+    const response = await fetch(url, { ...init, headers });
     if (!response.ok) {
         const body = await response.json().catch(() => null);
         throw new Error(body?.error ?? `${fallback} (${response.status})`);
@@ -194,6 +212,7 @@ const toJourney = (row: ApiJourneyRow): Journey => ({
     summary: row.summary ?? '',
     contentType: row.contentType ?? 'general',
     categories: row.categories ?? [],
+    thumbnailUrl: row.thumbnailUrl ?? null,
     status: row.status,
     parts: [],
     publishedParts: row.totalPublishedParts ?? 0,
@@ -241,10 +260,10 @@ export const AdminJourneysService = {
         };
     },
 
-    createJourney: async (form: JourneyFormData, parts: PartFormData[]): Promise<Journey> => {
+    createJourney: async (form: JourneyFormData, parts: PartFormData[], thumbnailFile?: File | null): Promise<Journey> => {
         const created = await send(`${API_BASE}/api/journeys/admin`, {
             method: 'POST',
-            body: JSON.stringify(await journeyMetadataBody(form)),
+            body: await journeyMetadataBody(form, thumbnailFile),
         }, 'Failed to create the journey');
 
         const { journeyId } = await created.json() as { journeyId: string };
@@ -266,10 +285,10 @@ export const AdminJourneysService = {
         return AdminJourneysService.fetchJourneyDetail(journeyId);
     },
 
-    updateJourney: async (id: string, form: JourneyFormData, parts: PartFormData[]): Promise<Journey> => {
+    updateJourney: async (id: string, form: JourneyFormData, parts: PartFormData[], thumbnailFile?: File | null): Promise<Journey> => {
         await send(`${API_BASE}/api/journeys/admin/${id}`, {
             method: 'PATCH',
-            body: JSON.stringify(await journeyMetadataBody(form)),
+            body: await journeyMetadataBody(form, thumbnailFile),
         }, 'Failed to save the journey');
 
         const before = await AdminJourneysService.fetchJourneyDetail(id);

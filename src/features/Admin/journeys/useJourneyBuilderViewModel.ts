@@ -32,6 +32,8 @@ export function useJourneyBuilderViewModel(journey: Journey | null, open: boolea
     // Accordion: which part card is expanded for editing (compact by default).
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>(AdminJourneysService.getCachedCategories);
+    const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+    const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(journey?.thumbnailUrl ?? null);
 
     useEffect(() => {
         if (!open) return;
@@ -48,10 +50,27 @@ export function useJourneyBuilderViewModel(journey: Journey | null, open: boolea
         setSaveError(null);
         setIsSaving(false);
         setExpandedId(null);
+        setThumbnailFile(null);
+        setThumbnailPreview(journey?.thumbnailUrl ?? null);
     }, [journey, open]);
 
     const setField = (field: keyof JourneyFormData, value: string) => {
         setForm(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleThumbnailChange = (file: File | null) => {
+        if (!file) return;
+        if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+            setSaveError('Please choose a JPEG, PNG, WebP or GIF image.');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            setSaveError('That image is larger than 5MB.');
+            return;
+        }
+        setSaveError(null);
+        setThumbnailFile(file);
+        setThumbnailPreview(URL.createObjectURL(file));
     };
 
     const toggleCategory = (name: string) => {
@@ -103,7 +122,7 @@ export function useJourneyBuilderViewModel(journey: Journey | null, open: boolea
     // ── Validation ────────────────────────────────────────────────────────
     const isValid = form.title.trim().length > 0 && parts.every(p => p.title.trim().length > 0);
 
-    const submit = async (onSave: (form: JourneyFormData, parts: PartFormData[]) => Promise<void>) => {
+    const submit = async (onSave: (form: JourneyFormData, parts: PartFormData[], thumbnailFile: File | null) => Promise<void>) => {
         if (isSaving) return;
         if (!isValid) {
             setSaveError('Journey title and every part title are required.');
@@ -112,7 +131,7 @@ export function useJourneyBuilderViewModel(journey: Journey | null, open: boolea
         setSaveError(null);
         setIsSaving(true);
         try {
-            await onSave(form, parts);
+            await onSave(form, parts, thumbnailFile);
         } catch (err: any) {
             setSaveError(err?.message ?? 'An unexpected error occurred.');
         } finally {
@@ -121,7 +140,7 @@ export function useJourneyBuilderViewModel(journey: Journey | null, open: boolea
     };
 
     return {
-        form, setField, categoryOptions, toggleCategory, parts, isSaving, saveError, isValid,
+        form, setField, categoryOptions, toggleCategory, thumbnailPreview, handleThumbnailChange, parts, isSaving, saveError, isValid,
         expandedId, toggleExpand,
         addPart, updatePart, removePart, togglePartArchive, movePart, reorderParts,
         submit,

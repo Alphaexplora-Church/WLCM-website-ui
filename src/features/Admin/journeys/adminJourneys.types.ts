@@ -34,6 +34,7 @@ export interface Journey {
     summary: string;
     contentType: JourneyContentType;
     categories: string[];
+    thumbnailUrl: string | null;
     status: JourneyStatus;
     parts: JourneyPart[];
     publishedParts: number;
