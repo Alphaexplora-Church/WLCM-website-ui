@@ -17,7 +17,7 @@ export function useAdminJourneysViewModel() {
 
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-    const [dateSort, setDateSort] = useState<DateSort>('updated_desc');
+    const [dateSort, setDateSort] = useState<DateSort>('created_desc');
 
     const [showBuilder, setShowBuilder] = useState(false);
     const [editTarget, setEditTarget] = useState<Journey | null>(null);
@@ -108,12 +108,12 @@ export function useAdminJourneysViewModel() {
 
     const closeBuilder = () => { setShowBuilder(false); setEditTarget(null); };
 
-    const handleSave = async (form: JourneyFormData, parts: PartFormData[]) => {
+    const handleSave = async (form: JourneyFormData, parts: PartFormData[], thumbnailFile: File | null) => {
         if (editTarget) {
-            await AdminJourneysService.updateJourney(editTarget.id, form, parts);
+            await AdminJourneysService.updateJourney(editTarget.id, form, parts, thumbnailFile);
             showToast(`"${form.title}" updated.`);
         } else {
-            await AdminJourneysService.createJourney(form, parts);
+            await AdminJourneysService.createJourney(form, parts, thumbnailFile);
             showToast(`"${form.title}" created.`);
         }
         closeBuilder();
