@@ -5,23 +5,9 @@ import { useSermonsViewModel } from './journeys/useSermonsViewModel';
 import type { SermonsTab } from './journeys/useSermonsViewModel';
 import { episodeCount, formatDate, journeyLabel, partLength, partThumbnail, toMediaEmbed } from './journeys/journeys.media';
 
-const IMAGES = [
-  'https://images.pexels.com/photos/19130852/pexels-photo-19130852.jpeg',
-  'https://images.pexels.com/photos/5020925/pexels-photo-5020925.jpeg',
-  'https://images.pexels.com/photos/34683153/pexels-photo-34683153.jpeg',
-];
-
-const SPEAKERS = [
-  { name: 'Pastor Mike', role: 'Lead Pastor', sermonCount: 42, img: IMAGES[0] },
-  { name: 'Pastor Anna', role: 'Associate Pastor', sermonCount: 18, img: IMAGES[1] },
-  { name: 'Pastor Ruben', role: 'Youth Pastor', sermonCount: 12, img: IMAGES[2] },
-];
-
 const TABS: { id: SermonsTab; label: string }[] = [
   { id: 'sermons', label: 'All Sermons' },
   { id: 'series', label: 'Series' },
-  { id: 'topics', label: 'Topics' },
-  { id: 'speakers', label: 'Speakers' },
 ];
 
 export default function Sermons() {
@@ -31,23 +17,23 @@ export default function Sermons() {
   const handleScroll = (dir: 'left' | 'right') => {
     const el = scrollRef.current;
     if (!el) return;
-    const card = el.querySelector('.sermon-card') as HTMLElement | null;
-    const cardWidth = card ? card.offsetWidth + 20 : 260;
+    const cards = el.querySelectorAll<HTMLElement>('.sermon-card');
+    if (cards.length === 0) return;
+    const cardWidth = cards[0].offsetWidth + 20;
     const scrollAmount = cardWidth * 2;
-    const maxScroll = el.scrollWidth - el.clientWidth;
+    const half = cards.length / 2;
+    const loopWidth = half >= 1 && cards[half] ? cards[half].offsetLeft - cards[0].offsetLeft : 0;
 
     if (dir === 'right') {
-      if (el.scrollLeft >= maxScroll - 5) {
-        el.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        el.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      if (loopWidth > 0 && el.scrollLeft >= loopWidth) {
+        el.scrollTo({ left: el.scrollLeft - loopWidth, behavior: 'auto' });
       }
+      el.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     } else {
-      if (el.scrollLeft <= 5) {
-        el.scrollTo({ left: maxScroll, behavior: 'smooth' });
-      } else {
-        el.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+      if (loopWidth > 0 && el.scrollLeft - scrollAmount < 0) {
+        el.scrollTo({ left: el.scrollLeft + loopWidth, behavior: 'auto' });
       }
+      el.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
     }
   };
 
@@ -90,10 +76,6 @@ export default function Sermons() {
             <h2 className="font-serif text-3xl text-soft-linen lowercase tracking-tighter leading-none md:text-5xl">
               Sermon archive.
             </h2>
-            <div className="mt-4 mb-3 h-[1px] w-16 bg-soft-linen/20" />
-            <h3 className="font-serif text-xl text-soft-linen/70 tracking-tight md:text-3xl">
-              sunday services
-            </h3>
           </motion.div>
         </div>
 
@@ -143,9 +125,9 @@ export default function Sermons() {
               ) : vm.heroJourneys.length === 0 ? (
                 <p className="py-10 font-sans text-sm text-soft-linen/50">No sermons have been published yet.</p>
               ) : (
-                vm.heroJourneys.map((journey) => (
+                [...vm.heroJourneys, ...(vm.heroJourneys.length > 1 ? vm.heroJourneys : [])].map((journey, copyIndex) => (
                   <button
-                    key={journey.journeyId}
+                    key={`${journey.journeyId}-${copyIndex}`}
                     onClick={() => vm.openJourney(journey)}
                     className="sermon-card group relative h-[300px] w-[200px] shrink-0 overflow-hidden rounded-[24px] border border-soft-linen/5 bg-midnight-teal text-left shadow-2xl md:h-[320px] md:w-[520px]"
                   >
@@ -499,53 +481,6 @@ export default function Sermons() {
                 </div>
               )}
 
-              {vm.activeTab === 'topics' && (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                  {vm.isLoadingCatalog
-                    ? [0, 1, 2, 3].map((i) => (
-                        <div key={i} className="h-14 animate-pulse rounded-xl bg-midnight-teal/5" />
-                      ))
-                    : vm.categoryCounts.map((cat) => (
-                        <button
-                          key={cat.name}
-                          onClick={() => {
-                            vm.setActiveTab('sermons');
-                            vm.selectCategory(cat.name);
-                          }}
-                          className="flex items-center justify-between rounded-xl border border-midnight-teal/10 px-5 py-4 font-sans text-sm text-midnight-teal/80 transition-colors hover:border-harvest-orange hover:text-harvest-orange"
-                        >
-                          <span>{cat.name}</span>
-                          <span className="text-midnight-teal/30">{cat.count}</span>
-                        </button>
-                      ))}
-                </div>
-              )}
-
-              {vm.activeTab === 'speakers' && (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {SPEAKERS.map((speaker) => (
-                    <div
-                      key={speaker.name}
-                      className="flex items-center gap-4 rounded-xl border border-midnight-teal/10 p-5"
-                    >
-                      <img
-                        src={speaker.img}
-                        alt={speaker.name}
-                        className="h-16 w-16 shrink-0 rounded-full object-cover grayscale"
-                      />
-                      <div>
-                        <h4 className="font-serif text-lg text-midnight-teal">{speaker.name}</h4>
-                        <p className="font-sans text-xs text-midnight-teal/40 uppercase tracking-widest">
-                          {speaker.role}
-                        </p>
-                        <p className="mt-1 font-sans text-xs text-midnight-teal/50">
-                          {speaker.sermonCount} sermons
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </motion.div>
           </AnimatePresence>
         </div>

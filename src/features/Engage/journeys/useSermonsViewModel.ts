@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { JourneyCategory, JourneyCategoryCount, JourneyDetail, JourneyPart, JourneySummary, NowPlaying } from './journeys.types';
 import { JourneysService } from './journeys.service';
 
-export type SermonsTab = 'sermons' | 'series' | 'topics' | 'speakers';
+export type SermonsTab = 'sermons' | 'series';
 
 export const SERMONS_PER_PAGE = 6;
 const CATALOG_LIMIT = 50;
@@ -129,10 +129,7 @@ export function useSermonsViewModel() {
     ? filteredSearchResults.slice((currentPage - 1) * SERMONS_PER_PAGE, currentPage * SERMONS_PER_PAGE)
     : pageJourneys;
 
-  const heroJourneys = useMemo(() => {
-    const sermons = catalog.filter((j) => j.contentType === 'sunday_service');
-    return (sermons.length > 0 ? sermons : catalog).slice(0, HERO_LIMIT);
-  }, [catalog]);
+  const heroJourneys = useMemo(() => catalog.slice(0, HERO_LIMIT), [catalog]);
 
   const filteredSeries = useMemo(
     () => (activeCategory ? catalog.filter((j) => j.categories.includes(activeCategory)) : catalog),
