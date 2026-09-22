@@ -17,7 +17,7 @@ export function useAdminJourneysViewModel() {
 
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-    const [dateSort, setDateSort] = useState<DateSort>('updated_desc');
+    const [dateSort, setDateSort] = useState<DateSort>('created_desc');
 
     const [showBuilder, setShowBuilder] = useState(false);
     const [editTarget, setEditTarget] = useState<Journey | null>(null);
