@@ -72,7 +72,7 @@ export default function AdminJourneys() {
                                 value={vm.search}
                                 onChange={e => vm.setSearch(e.target.value)}
                                 placeholder="Search by title or description…"
-                                className="w-full bg-white border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-midnight-teal/30 shadow-sm"
+                                className="w-full bg-white border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm text-midnight-teal placeholder:text-midnight-teal/40 focus:outline-none focus:ring-2 focus:ring-midnight-teal/30 shadow-sm"
                             />
                         </div>
 

@@ -1,6 +1,6 @@
 // ─── Journey Builder: Modal (View) ──────────────────────────────────────────
 import { Reorder } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+import { ImageOff, Loader2 } from 'lucide-react';
 import type { Journey, JourneyContentType, JourneyFormData, JourneyStatus, PartFormData } from './adminJourneys.types';
 import { CONTENT_TYPE_OPTIONS } from './adminJourneys.types';
 import { useJourneyBuilderViewModel } from './useJourneyBuilderViewModel';
@@ -11,7 +11,7 @@ interface JourneyBuilderModalProps {
     journey: Journey | null;
     isLoadingParts?: boolean;
     onClose: () => void;
-    onSave: (form: JourneyFormData, parts: PartFormData[]) => Promise<void>;
+    onSave: (form: JourneyFormData, parts: PartFormData[], thumbnailFile: File | null) => Promise<void>;
 }
 
 const STATUS_OPTIONS: { value: JourneyStatus; label: string }[] = [
@@ -67,6 +67,27 @@ export function JourneyBuilderModal({ open, journey, isLoadingParts = false, onC
                                 placeholder="What is this journey about?"
                                 className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-black focus:outline-none focus:ring-2 focus:ring-midnight-teal/40 resize-none"
                             />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest text-midnight-teal mb-1">
+                                Thumbnail <span className="normal-case font-semibold text-gray-400">(optional)</span>
+                            </label>
+                            <div className="flex items-center gap-4">
+                                {vm.thumbnailPreview ? (
+                                    <img src={vm.thumbnailPreview} alt="" className="h-20 w-32 shrink-0 rounded-xl object-cover" />
+                                ) : (
+                                    <div className="grid h-20 w-32 shrink-0 place-items-center rounded-xl bg-midnight-teal/5 text-midnight-teal/30">
+                                        <ImageOff size={20} />
+                                    </div>
+                                )}
+                                <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp,image/gif"
+                                    onChange={e => vm.handleThumbnailChange(e.target.files?.[0] ?? null)}
+                                    className="text-sm text-midnight-teal/70 file:mr-3 file:rounded-lg file:border-0 file:bg-midnight-teal file:px-4 file:py-2 file:text-sm file:font-bold file:text-soft-linen hover:file:bg-deep-teal"
+                                />
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
