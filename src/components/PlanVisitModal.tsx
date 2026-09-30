@@ -36,7 +36,7 @@ const getNextThreeSundays = () => {
   const d = new Date();
   // If today is Sunday (0), it stays today. Otherwise it moves to the next Sunday.
   d.setDate(d.getDate() + ((7 - d.getDay()) % 7));
-  
+
   for (let i = 0; i < 3; i++) {
     const formatted = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     const isoDate = d.toISOString().split('T')[0];
@@ -228,11 +228,10 @@ const PlanVisitModal = ({ isOpen, onClose }: PlanVisitModalProps) => {
                           ).map(({ value, label }) => (
                             <label key={value} className="flex items-center gap-2.5 cursor-pointer group">
                               <div
-                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                  vm.form.guestType === value
+                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${vm.form.guestType === value
                                     ? 'border-harvest-orange bg-harvest-orange'
                                     : 'border-midnight-teal/20 group-hover:border-harvest-orange/50'
-                                }`}
+                                  }`}
                               >
                                 {vm.form.guestType === value && (
                                   <div className="w-2 h-2 bg-white rounded-full" />
@@ -340,7 +339,7 @@ const PlanVisitModal = ({ isOpen, onClose }: PlanVisitModalProps) => {
                       </svg>
                     </div>
                     <div>
-                      <h4 className="font-serif text-sm sm:text-lg md:text-2xl mb-1 lowercase leading-tight">
+                      <h4 className="font-serif text-sm sm:text-lg md:text-2xl mb-1 leading-tight">
                         {item.title}
                       </h4>
                       <p className="text-[10px] sm:text-[11px] md:text-xs text-soft-linen/40 leading-relaxed font-sans max-w-xs">
