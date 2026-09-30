@@ -10,7 +10,7 @@ import PlanVisitModal from '../../components/PlanVisitModal';
 const cards = [
   {
     number: "01",
-    title: "know God",
+    title: "Know God",
     tagline: "Every sunday is an invitation.",
     body: "A warm invitation to experience a real relationship with God. Our weekend gatherings are welcoming, Bible-centered, and designed to help you encounter Jesus in a meaningful way. Whether you are exploring faith or growing deeper in your walk, there is a place for you here. ",
     ctas: [
@@ -21,7 +21,7 @@ const cards = [
   },
   {
     number: "02",
-    title: "find Freedom",
+    title: "Find Freedom",
     tagline: "You were never meant to do life alone.",
     body: "You were never meant to walk this alone. Through mentoring, Caregroups, and discipleship, we walk alongside you — in your faith, your relationships, and your personal growth. Whatever you're carrying right now, how can we help?",
     ctas: [
@@ -31,7 +31,7 @@ const cards = [
   },
   {
     number: "03",
-    title: "discover Purpose",
+    title: "Discover Purpose",
     tagline: "You were made for more.",
     body: "Every person is created with intention. The WLCM Discipleship Journey helps you grow spiritually, understand your gifts, and discover how your life fits into God’s greater plan.",
     ctas: [
@@ -41,7 +41,7 @@ const cards = [
   },
   {
     number: "04",
-    title: "make a Difference",
+    title: "Make a Difference",
     tagline: "Your life can change others.",
     body: "True joy is found when we serve others. Through our ministries and outreach opportunities, you can use your gifts and talents to impact the church and the community.",
     ctas: [
