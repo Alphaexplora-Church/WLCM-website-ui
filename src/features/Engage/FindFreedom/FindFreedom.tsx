@@ -127,10 +127,10 @@ const FindFreedom = () => {
                             {program.number}
                           </span>
                           <span
-                            className={`px-3 py-0.5 rounded-full text-[9px] uppercase tracking-widest font-bold border transition-colors ${
+                            className={`px-2.5 py-0.5 rounded-full text-[8px] md:text-[9px] uppercase tracking-widest font-bold border transition-colors ${
                               isActive
-                                ? 'bg-harvest-orange/15 text-harvest-orange border-harvest-orange/30'
-                                : 'bg-white/[0.04] text-soft-linen/50 border-soft-linen/10'
+                                ? 'bg-deep-teal/70 text-soft-linen border-soft-linen/30 shadow-sm'
+                                : 'bg-deep-teal/40 text-soft-linen/80 border-soft-linen/15'
                             }`}
                           >
                             {program.tag}
@@ -144,7 +144,7 @@ const FindFreedom = () => {
                           {program.title}
                         </h2>
 
-                        <p className="text-harvest-orange/80 text-xs xl:text-sm font-medium tracking-tight line-clamp-2">
+                        <p className="text-soft-linen/85 text-xs xl:text-sm font-medium tracking-tight line-clamp-2">
                           {program.subtitle}
                         </p>
                       </div>
@@ -245,12 +245,12 @@ const FindFreedom = () => {
 
                       {/* Narrative & Details */}
                       <div>
-                        <div className="flex items-center gap-3 mb-2">
+                        <div className="flex items-center gap-3 mb-3">
                           <span className="text-harvest-orange text-[9px] uppercase tracking-[0.35em] font-bold">
                             Stage {activeProgram.number} / {activeProgram.duration}
                           </span>
                           <span className="text-soft-linen/20">•</span>
-                          <span className="text-soft-linen/50 text-[10px] uppercase tracking-widest">
+                          <span className="px-2.5 py-0.5 rounded-full bg-deep-teal/70 text-soft-linen text-[8px] uppercase tracking-widest font-bold border border-soft-linen/30 shadow-sm">
                             {activeProgram.tag}
                           </span>
                         </div>
@@ -260,15 +260,17 @@ const FindFreedom = () => {
                         >
                           {activeProgram.title}
                         </h3>
-                        <p className="text-harvest-orange/90 text-sm font-medium tracking-tight mb-3">
+                        <p className="text-soft-linen/85 text-sm font-medium tracking-tight mb-3">
                           {activeProgram.subtitle}
                         </p>
                         <p className="text-soft-linen/60 text-sm xl:text-base leading-relaxed mb-4">
                           {activeProgram.description}
                         </p>
-                        <p className="text-harvest-orange/80 text-xs xl:text-sm italic leading-relaxed">
-                          "{activeProgram.closingLine}"
-                        </p>
+                        <div className="pl-3 border-l-2 border-harvest-orange/40 mb-2">
+                          <p className="text-soft-linen/75 text-xs xl:text-sm italic leading-relaxed font-medium">
+                            "{activeProgram.closingLine}"
+                          </p>
+                        </div>
                       </div>
                     </div>
 
@@ -279,9 +281,12 @@ const FindFreedom = () => {
                       </span>
                       <button
                         onClick={scrollToSignup}
-                        className="px-6 py-3 rounded-full bg-harvest-orange text-midnight-teal font-sans text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-[#d4581d] transition-all duration-300 shadow-md shadow-harvest-orange/20"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-harvest-orange text-midnight-teal font-sans text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-[#d4581d] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-harvest-orange transition-all duration-300 shadow-md shadow-harvest-orange/20"
                       >
-                        {activeProgram.cta}
+                        <span>{activeProgram.cta}</span>
+                        <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
                       </button>
                     </div>
                   </motion.div>
@@ -330,13 +335,23 @@ const FindFreedom = () => {
                           </h2>
                         </div>
                         <div className="flex items-center gap-3 shrink-0 mt-1">
-                          <span className="px-3 py-1 rounded-full bg-harvest-orange/10 text-harvest-orange text-[9px] uppercase tracking-widest font-bold border border-harvest-orange/20">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[8px] uppercase tracking-widest font-bold border transition-colors ${
+                              isExpanded
+                                ? 'bg-deep-teal/70 text-soft-linen border-soft-linen/30 shadow-sm'
+                                : 'bg-deep-teal/40 text-soft-linen/80 border-soft-linen/15'
+                            }`}
+                          >
                             {program.tag}
                           </span>
                           <motion.div
                             animate={{ rotate: isExpanded ? 180 : 0 }}
                             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                            className="w-7 h-7 rounded-full bg-white/[0.04] border border-soft-linen/10 flex items-center justify-center shrink-0"
+                            className={`w-7 h-7 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                              isExpanded
+                                ? 'bg-harvest-orange/15 border-harvest-orange/40'
+                                : 'bg-white/[0.04] border-soft-linen/10'
+                            }`}
                           >
                             <svg
                               className={`w-3.5 h-3.5 transition-colors duration-300 ${
@@ -354,7 +369,7 @@ const FindFreedom = () => {
                       </div>
 
                       {/* Subtitle */}
-                      <p className="text-harvest-orange/80 text-sm font-medium tracking-tight mb-3">
+                      <p className="text-soft-linen/85 text-sm font-medium tracking-tight mb-3">
                         {program.subtitle}
                       </p>
 
@@ -437,9 +452,11 @@ const FindFreedom = () => {
                                 {program.description}
                               </p>
 
-                              <p className="text-harvest-orange/80 text-xs italic leading-relaxed mb-6">
-                                "{program.closingLine}"
-                              </p>
+                              <div className="pl-3 border-l-2 border-harvest-orange/40 mb-6">
+                                <p className="text-soft-linen/75 text-xs italic leading-relaxed font-medium">
+                                  "{program.closingLine}"
+                                </p>
+                              </div>
                             </motion.div>
                           </motion.div>
                         )}
@@ -447,7 +464,7 @@ const FindFreedom = () => {
                     </div>
 
                     <div className="flex items-center justify-between pt-5 border-t border-soft-linen/10 mt-6">
-                      <span className="text-soft-linen/35 text-[10px] uppercase tracking-widest font-semibold">
+                      <span className="text-soft-linen/40 text-[10px] uppercase tracking-widest font-semibold font-mono">
                         {program.duration}
                       </span>
                       <button
@@ -455,9 +472,12 @@ const FindFreedom = () => {
                           e.stopPropagation();
                           scrollToSignup();
                         }}
-                        className="px-4 py-2 rounded-full bg-harvest-orange/10 text-white text-[9px] uppercase tracking-[0.2em] font-bold border border-harvest-orange/25 hover:bg-harvest-orange hover:text-midnight-teal transition-all duration-300"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-harvest-orange text-midnight-teal font-sans text-[10px] uppercase tracking-[0.2em] font-bold shadow-md shadow-harvest-orange/20 hover:bg-[#d4581d] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-harvest-orange transition-all duration-300"
                       >
-                        {program.cta}
+                        <span>{program.cta}</span>
+                        <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
                       </button>
                     </div>
                   </motion.div>
