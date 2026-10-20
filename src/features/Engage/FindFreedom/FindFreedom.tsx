@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navigation from '../../../components/Navigation';
 import { useFindFreedomViewModel } from './viewmodels/useFindFreedomViewModel';
@@ -8,9 +8,50 @@ const FindFreedom = () => {
     useFindFreedomViewModel();
   const [activeStage, setActiveStage] = useState<number>(0);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const focusCard = (index: number, offsetAdjustment = 0) => {
+    if (typeof window === 'undefined' || window.innerWidth >= 1024) return;
+
+    requestAnimationFrame(() => {
+      const targetEl = cardRefs.current[index];
+      if (targetEl) {
+        const navOffset = 88; // Floating navbar height + aesthetic clearance
+        const currentTop = targetEl.getBoundingClientRect().top + window.scrollY;
+        const targetY = Math.max(0, currentTop - offsetAdjustment - navOffset);
+
+        window.scrollTo({
+          top: targetY,
+          behavior: 'smooth',
+        });
+      }
+    });
+  };
 
   const toggleCard = (index: number) => {
-    setExpandedCard((prev) => (prev === index ? null : index));
+    const isOpening = expandedCard !== index;
+    const prevExpanded = expandedCard;
+    setExpandedCard(isOpening ? index : null);
+
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      if (isOpening) {
+        // Calculate offset adjustment if a preceding card is currently expanded and will collapse
+        let offsetAdjustment = 0;
+        if (prevExpanded !== null && prevExpanded < index) {
+          const prevCardEl = cardRefs.current[prevExpanded];
+          if (prevCardEl) {
+            const contentEl = prevCardEl.querySelector('[data-expandable-content]');
+            if (contentEl) {
+              offsetAdjustment = contentEl.getBoundingClientRect().height;
+            }
+          }
+        }
+        focusCard(index, offsetAdjustment);
+      } else {
+        // Closing: Focus directly on the start of this card
+        focusCard(index, 0);
+      }
+    }
   };
 
   const activeProgram = programs[activeStage] || programs[0];
@@ -249,22 +290,29 @@ const FindFreedom = () => {
 
             </div>
 
-            {/* ── MOBILE: Original Look with Image Placeholder Before Paragraph (< lg viewports) ── */}
+            {/* ── MOBILE: Morphing Accordion with Viewport Tracking (< lg viewports) ── */}
             <div className="lg:hidden flex flex-col gap-4">
               {programs.map((program, index) => {
                 const isExpanded = expandedCard === index;
                 return (
                   <motion.div
                     key={index}
+                    ref={(el) => {
+                      cardRefs.current[index] = el;
+                    }}
+                    layout
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: index * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{
+                      layout: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
+                      opacity: { duration: 0.3 },
+                    }}
                     onClick={() => toggleCard(index)}
-                    className={`group border rounded-2xl p-6 md:p-8 transition-all duration-500 bg-white/[0.03] cursor-pointer select-none flex flex-col justify-between ${
+                    className={`group border rounded-2xl p-6 md:p-8 cursor-pointer select-none flex flex-col justify-between scroll-mt-24 transition-colors duration-300 ${
                       isExpanded
-                        ? 'border-harvest-orange/40 bg-white/[0.055]'
-                        : 'border-soft-linen/10 hover:border-harvest-orange/40 hover:bg-white/[0.055]'
+                        ? 'border-harvest-orange/40 bg-white/[0.055] shadow-xl shadow-harvest-orange/5'
+                        : 'border-soft-linen/10 hover:border-harvest-orange/30 hover:bg-white/[0.04]'
                     }`}
                   >
                     <div className="flex-1 flex flex-col">
@@ -285,17 +333,23 @@ const FindFreedom = () => {
                           <span className="px-3 py-1 rounded-full bg-harvest-orange/10 text-harvest-orange text-[9px] uppercase tracking-widest font-bold border border-harvest-orange/20">
                             {program.tag}
                           </span>
-                          <motion.svg
+                          <motion.div
                             animate={{ rotate: isExpanded ? 180 : 0 }}
-                            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                            className="w-4 h-4 text-soft-linen/40"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
+                            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                            className="w-7 h-7 rounded-full bg-white/[0.04] border border-soft-linen/10 flex items-center justify-center shrink-0"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                          </motion.svg>
+                            <svg
+                              className={`w-3.5 h-3.5 transition-colors duration-300 ${
+                                isExpanded ? 'text-harvest-orange' : 'text-soft-linen/40'
+                              }`}
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </motion.div>
                         </div>
                       </div>
 
@@ -309,75 +363,84 @@ const FindFreedom = () => {
                         {isExpanded && (
                           <motion.div
                             key="content"
+                            data-expandable-content
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                             className="overflow-hidden"
                           >
-                            {/* Mobile Preview Media Slot (Before Paragraph) */}
-                            <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden border border-soft-linen/10 bg-white/[0.03] mb-4 mt-2 select-none">
-                              {program.image ? (
-                                <img
-                                  src={program.image}
-                                  alt={program.title}
-                                  className="w-full h-full object-cover"
-                                  loading="lazy"
-                                />
-                              ) : (
-                                <div className="w-full h-full relative flex flex-col justify-between p-4 bg-gradient-to-br from-white/[0.05] via-white/[0.02] to-transparent">
-                                  <div className="absolute top-2.5 left-2.5 w-2.5 h-2.5 border-t border-l border-soft-linen/25 pointer-events-none" />
-                                  <div className="absolute top-2.5 right-2.5 w-2.5 h-2.5 border-t border-r border-soft-linen/25 pointer-events-none" />
-                                  <div className="absolute bottom-2.5 left-2.5 w-2.5 h-2.5 border-b border-l border-soft-linen/25 pointer-events-none" />
-                                  <div className="absolute bottom-2.5 right-2.5 w-2.5 h-2.5 border-b border-r border-soft-linen/25 pointer-events-none" />
+                            <motion.div
+                              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                              transition={{ duration: 0.3, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+                              className="pt-2"
+                            >
+                              {/* Mobile Preview Media Slot (Before Paragraph) */}
+                              <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden border border-soft-linen/10 bg-white/[0.03] mb-4 select-none">
+                                {program.image ? (
+                                  <img
+                                    src={program.image}
+                                    alt={program.title}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full relative flex flex-col justify-between p-4 bg-gradient-to-br from-white/[0.05] via-white/[0.02] to-transparent">
+                                    <div className="absolute top-2.5 left-2.5 w-2.5 h-2.5 border-t border-l border-soft-linen/25 pointer-events-none" />
+                                    <div className="absolute top-2.5 right-2.5 w-2.5 h-2.5 border-t border-r border-soft-linen/25 pointer-events-none" />
+                                    <div className="absolute bottom-2.5 left-2.5 w-2.5 h-2.5 border-b border-l border-soft-linen/25 pointer-events-none" />
+                                    <div className="absolute bottom-2.5 right-2.5 w-2.5 h-2.5 border-b border-r border-soft-linen/25 pointer-events-none" />
 
-                                  <div className="flex items-center justify-between relative z-10">
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-midnight-teal/80 border border-soft-linen/15 text-[8px] uppercase tracking-widest text-soft-linen/80 font-mono">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-harvest-orange animate-pulse" />
-                                      Preview • {program.title}
-                                    </span>
-                                    <span className="text-soft-linen/40 font-mono text-[9px] uppercase tracking-widest">
-                                      {program.tag}
-                                    </span>
-                                  </div>
+                                    <div className="flex items-center justify-between relative z-10">
+                                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-midnight-teal/80 border border-soft-linen/15 text-[8px] uppercase tracking-widest text-soft-linen/80 font-mono">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-harvest-orange animate-pulse" />
+                                        Preview • {program.title}
+                                      </span>
+                                      <span className="text-soft-linen/40 font-mono text-[9px] uppercase tracking-widest">
+                                        {program.tag}
+                                      </span>
+                                    </div>
 
-                                  <div className="self-center flex flex-col items-center gap-1.5 my-auto relative z-10">
-                                    <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-soft-linen/10 flex items-center justify-center">
-                                      <svg
-                                        className="w-5 h-5 text-soft-linen/35 stroke-[1.4]"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                                        />
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                                        />
-                                      </svg>
+                                    <div className="self-center flex flex-col items-center gap-1.5 my-auto relative z-10">
+                                      <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-soft-linen/10 flex items-center justify-center">
+                                        <svg
+                                          className="w-5 h-5 text-soft-linen/35 stroke-[1.4]"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                          stroke="currentColor"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                                          />
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                                          />
+                                        </svg>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between relative z-10 text-soft-linen/40 text-[9px] font-sans">
+                                      <span>WLCM • Encounter</span>
+                                      <span className="uppercase tracking-widest font-mono">{program.duration}</span>
                                     </div>
                                   </div>
+                                )}
+                              </div>
 
-                                  <div className="flex items-center justify-between relative z-10 text-soft-linen/40 text-[9px] font-sans">
-                                    <span>WLCM • Encounter</span>
-                                    <span className="uppercase tracking-widest font-mono">{program.duration}</span>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                              <p className="text-soft-linen/60 text-sm leading-relaxed mb-4">
+                                {program.description}
+                              </p>
 
-                            <p className="text-soft-linen/60 text-sm leading-relaxed mb-4">
-                              {program.description}
-                            </p>
-
-                            <p className="text-harvest-orange/80 text-xs italic leading-relaxed mb-6">
-                              {program.closingLine}
-                            </p>
+                              <p className="text-harvest-orange/80 text-xs italic leading-relaxed mb-6">
+                                "{program.closingLine}"
+                              </p>
+                            </motion.div>
                           </motion.div>
                         )}
                       </AnimatePresence>
