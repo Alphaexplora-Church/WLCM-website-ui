@@ -48,21 +48,7 @@ export default function DaughterChurchesSection() {
   return (
     <section id="churches" className="bg-deep-teal py-24 md:py-40 relative overflow-hidden">
 
-      {/* Background watermark */}
-      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={activeRegion}
-            initial={{ opacity: 0, scale: 1.2 }}
-            animate={{ opacity: 0.04, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.6 }}
-            className="font-serif text-[30vw] text-soft-linen font-bold leading-none select-none"
-          >
-            {activeRegion.slice(0, 3).toUpperCase()}
-          </motion.span>
-        </AnimatePresence>
-      </div>
+
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
 
