@@ -48,7 +48,13 @@ const DiscoverPurposeCard: React.FC<DiscoverPurposeCardProps> = ({
                 <span className="text-harvest-orange text-[9px] uppercase tracking-[0.35em] font-bold">
                   {program.number}
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-harvest-orange/10 text-harvest-orange text-[8px] uppercase tracking-widest font-bold border border-harvest-orange/20">
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[8px] uppercase tracking-widest font-bold border transition-colors ${
+                    isExpanded
+                      ? 'bg-deep-teal/70 text-soft-linen border-soft-linen/30 shadow-sm'
+                      : 'bg-deep-teal/40 text-soft-linen/80 border-soft-linen/15'
+                  }`}
+                >
                   {program.tag}
                 </span>
               </div>
@@ -62,7 +68,7 @@ const DiscoverPurposeCard: React.FC<DiscoverPurposeCardProps> = ({
               </h3>
 
               {/* Subtitle */}
-              <p className="text-harvest-orange/80 text-sm md:text-base font-medium tracking-tight">
+              <p className="text-soft-linen/85 text-sm md:text-base font-medium tracking-tight">
                 {program.subtitle}
               </p>
             </div>
@@ -123,7 +129,7 @@ const DiscoverPurposeCard: React.FC<DiscoverPurposeCardProps> = ({
                 </p>
 
                 {/* Closing line */}
-                <div className="flex items-start gap-3 mb-8 pl-4 border-l-2 border-harvest-orange/30">
+                <div className="flex items-start gap-3 mb-8 pl-4 border-l-2 border-harvest-orange/40">
                   <p className="text-soft-linen/75 text-sm leading-relaxed font-medium">
                     {program.closingLine}
                   </p>
@@ -135,9 +141,12 @@ const DiscoverPurposeCard: React.FC<DiscoverPurposeCardProps> = ({
                     e.stopPropagation();
                     onCtaClick();
                   }}
-                  className="px-4 py-2 rounded-full bg-harvest-orange/10 text-white text-[9px] uppercase tracking-[0.2em] font-bold border border-harvest-orange/25 hover:bg-harvest-orange hover:text-midnight-teal transition-all duration-300"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-harvest-orange text-midnight-teal font-sans text-[10px] uppercase tracking-[0.2em] font-bold shadow-md shadow-harvest-orange/20 hover:bg-[#d4581d] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-harvest-orange transition-all duration-300"
                 >
-                  {program.ctaText}
+                  <span>{program.ctaText}</span>
+                  <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
                 </button>
               </div>
             </motion.div>
