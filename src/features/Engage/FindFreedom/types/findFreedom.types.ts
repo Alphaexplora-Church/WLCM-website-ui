@@ -16,6 +16,8 @@ export interface Program {
   cta: string;
   duration: string;
   tag: string;
+  image?: string;
+  previewLabel?: string;
 }
 
 export interface FindFreedomViewModelState {
