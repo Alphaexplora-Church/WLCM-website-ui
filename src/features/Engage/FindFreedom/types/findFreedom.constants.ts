@@ -11,6 +11,7 @@ export const FIND_FREEDOM_PROGRAMS: Program[] = [
     cta: 'Reserve My Spot',
     duration: 'Day 1',
     tag: 'Foundation',
+    previewLabel: 'Session 01 • Heart Preparation',
   },
   {
     number: '02',
@@ -22,6 +23,7 @@ export const FIND_FREEDOM_PROGRAMS: Program[] = [
     cta: 'Register for Encounter',
     duration: 'Day 2',
     tag: 'Experience',
+    previewLabel: 'Session 02 • Worship & Encounter',
   },
   {
     number: '03',
@@ -33,6 +35,7 @@ export const FIND_FREEDOM_PROGRAMS: Program[] = [
     cta: 'Take My Next Step',
     duration: 'Day 3',
     tag: 'Water Baptism',
+    previewLabel: 'Session 03 • Discipleship & Baptism',
   },
 ];
 

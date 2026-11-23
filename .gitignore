@@ -142,3 +142,7 @@ vite.config.ts.timestamp-*
 .agents*
 .claude*
 skills*
+
+.codex*
+.cursor*
+.grok*
