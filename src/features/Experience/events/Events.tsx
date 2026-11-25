@@ -134,6 +134,8 @@ const Events = () => {
             {events.map((event, i) => {
               const align = i % 2 === 0 ? 'right' : 'left';
               const color = i % 2 === 0 ? 'orange' : 'teal';
+              const displayStart = event.next_occurrence?.start_date ?? event.start_date;
+              const displayEnd = event.next_occurrence?.end_date ?? event.end_date;
               const bgImage = event.media && event.media.length > 0
                 ? event.media[0].file_url
                 : 'https://res.cloudinary.com/ldbgnurm/image/upload/v1784183381/476101441_1017940960371707_6341065751658890887_n_mgazo0.jpg';
@@ -168,7 +170,7 @@ const Events = () => {
                     <span className={`text-sm md:text-lg font-bold tracking-widest -rotate-90 whitespace-nowrap
                     ${color === 'orange' ? 'text-[#F5841A]' : 'text-[#002E38]'}
                   `}>
-                      {formatEventTimeRange(event.start_date, event.end_date)}
+                      {formatEventTimeRange(displayStart, displayEnd)}
                     </span>
                   </div>
 
@@ -176,9 +178,9 @@ const Events = () => {
                   <div className={`relative z-10 flex flex-col justify-center px-6 md:px-10 w-full h-full
                   ${align === 'left' ? 'items-start text-left pl-8' : 'items-end text-right pr-8'}
                 `}>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <span className="text-[#F5841A] bg-black/20 px-2 py-1 rounded text-[10px] md:text-xs font-bold uppercase tracking-widest backdrop-blur-sm border border-[#F5841A]/30">
-                        {formatEventDateRange(event.start_date, event.end_date)}
+                        {formatEventDateRange(displayStart, displayEnd)}
                       </span>
                       {event.category_content && (
                         <span className="text-teal-400 bg-black/20 px-2 py-1 rounded text-[10px] md:text-xs font-bold uppercase tracking-widest backdrop-blur-sm border border-teal-400/30">
@@ -199,6 +201,17 @@ const Events = () => {
                         <p className="text-[#E6EDEF]/70 font-sans text-xs uppercase tracking-[0.2em] mt-1 line-clamp-2">
                           {event.description}
                         </p>
+                      )}
+                      {event.google_form_url && (
+                        <a
+                          href={event.google_form_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="mt-3 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#F5841A] text-white font-sans text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-[#ff9533] transition-colors shadow-md"
+                        >
+                          Register
+                        </a>
                       )}
                     </div>
                   </div>

@@ -81,10 +81,10 @@ export default function AdminRegistrations() {
         <div className="flex min-h-screen bg-soft-linen">
             <AdminSidebar />
 
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-w-0">
                 <AdminHeader userName="Admin" />
 
-                <main className="p-6 flex-1 space-y-6">
+                <main className="p-4 sm:p-6 flex-1 space-y-5 sm:space-y-6">
                     {/* ── Page Title ─────────────────────────────────── */}
                     <div>
                         <h1 className="text-2xl font-serif text-midnight-teal">Registrations</h1>
@@ -94,14 +94,14 @@ export default function AdminRegistrations() {
                     </div>
 
                     {/* ── Tab Filter Bar ──────────────────────────────── */}
-                    <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit shadow-sm">
+                    <div className="flex flex-wrap sm:flex-nowrap gap-1 bg-white border border-gray-200 rounded-xl p-1 w-full sm:w-fit max-w-full overflow-x-auto shadow-sm">
                         {TABS.map(tab => {
                             const isActive = vm.activeTab === tab.id;
                             return (
                                 <button
                                     key={tab.id}
                                     onClick={() => vm.setActiveTab(tab.id)}
-                                    className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200
+                                    className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200
                                         ${isActive
                                             ? 'bg-midnight-teal text-soft-linen shadow'
                                             : 'text-gray-400 hover:text-midnight-teal'}`}

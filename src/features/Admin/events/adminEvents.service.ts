@@ -20,14 +20,16 @@ const getAuthHeaders = (isFormData: boolean = false): HeadersInit => {
     return headers;
 };
 
-const buildFormData = (data: EventFormData, type: string): FormData => {
+const buildFormData = (data: EventFormData, type: string, isUpdate: boolean = false): FormData => {
     const formData = new FormData();
-    formData.append('type_content', type);
+    if (!isUpdate) {
+        formData.append('type_content', type);
+    }
     formData.append('title', data.title);
 
-    if (data.description) formData.append('description', data.description);
-    if (data.location) formData.append('location', data.location);
-    if (data.category_content) formData.append('category_content', data.category_content);
+    if (data.description || isUpdate) formData.append('description', data.description ?? '');
+    if (data.location || isUpdate) formData.append('location', data.location ?? '');
+    if (data.category_content || isUpdate) formData.append('category_content', data.category_content ?? '');
 
     if (data.start_date_date) {
         const time = data.start_date_time || '00:00';
@@ -39,7 +41,28 @@ const buildFormData = (data: EventFormData, type: string): FormData => {
         formData.append('end_date', `${data.end_date_date}T${time}:00`);
     }
 
-    if (data.image) {
+    if (type === 'event') {
+        const trimmedFormUrl = (data.google_form_url ?? '').trim();
+        if (trimmedFormUrl || isUpdate) {
+            formData.append('google_form_url', trimmedFormUrl);
+        }
+
+        if (data.recurrence_frequency === 'weekly' || data.recurrence_frequency === 'monthly') {
+            formData.append('recurrence_frequency', data.recurrence_frequency);
+            formData.append('recurrence_interval', String(data.recurrence_interval || 1));
+            if (data.recurrence_until) {
+                formData.append('recurrence_until', data.recurrence_until);
+            } else if (isUpdate) {
+                formData.append('recurrence_until', '');
+            }
+        } else if (isUpdate) {
+            // Clearing recurrence back to a one-off event: events-api.md specifies
+            // sending recurrence_frequency='' without recurrence_interval or recurrence_until.
+            formData.append('recurrence_frequency', '');
+        }
+    }
+
+    if (data.image && !isUpdate) {
         formData.append('image', data.image);
     }
 
@@ -97,7 +120,7 @@ export const AdminEventsService = {
      * Updates an existing event by ID (requires authentication).
      */
     updateEvent: async (id: number, data: EventFormData, type: string = 'event'): Promise<void> => {
-        const formData = buildFormData(data, type);
+        const formData = buildFormData(data, type, true);
         const response = await fetch(`${API_BASE}/api/contents/admin/${id}`, {
             method: 'PATCH',
             headers: getAuthHeaders(true),

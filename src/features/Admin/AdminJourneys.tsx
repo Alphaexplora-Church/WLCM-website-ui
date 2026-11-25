@@ -25,20 +25,20 @@ export default function AdminJourneys() {
         <div className="flex min-h-screen bg-soft-linen">
             <AdminSidebar />
 
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-w-0">
                 <AdminHeader userName="Admin" />
 
-                <main className="p-6 flex-1 space-y-6">
+                <main className="p-4 sm:p-6 flex-1 space-y-5 sm:space-y-6">
 
                     {/* ── Page Title ─────────────────────────────────── */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                             <h1 className="text-2xl font-serif text-midnight-teal">Journeys</h1>
                             <p className="text-sm text-gray-400 mt-0.5">Build and manage discipleship journeys and their series parts.</p>
                         </div>
                         <button
                             onClick={vm.openCreateBuilder}
-                            className="flex items-center gap-2 bg-midnight-teal text-soft-linen px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-midnight-teal/90 transition-colors shadow"
+                            className="flex items-center justify-center gap-2 bg-midnight-teal text-soft-linen px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-midnight-teal/90 transition-colors shadow w-full sm:w-auto"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -78,7 +78,7 @@ export default function AdminJourneys() {
 
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             {/* Status filter chips */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 {([
                                     { value: 'all', label: 'All' },
                                     { value: 'draft', label: 'Draft' },

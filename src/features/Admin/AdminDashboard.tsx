@@ -17,10 +17,10 @@ export default function AdminDashboard() {
         <div className="flex min-h-screen bg-soft-linen">
             <AdminSidebar />
 
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-w-0">
                 <AdminHeader userName="Admin" />
 
-                <main className="p-6 flex-1 bg-white/50">
+                <main className="p-4 sm:p-6 flex-1 bg-white/50">
                     <h1 className="text-2xl font-serif text-midnight-teal">Dashboard Home</h1>
                 </main>
             </div>
